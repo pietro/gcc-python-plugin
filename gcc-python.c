@@ -69,7 +69,7 @@ int plugin_is_GPL_compatible;
 #if GCC_PYTHON_TRACE_ALL_EVENTS
 static const char* event_name[] = {
 #define DEFEVENT(NAME) \
-  #NAME, 
+  #NAME,
 # include "plugin.def"
 # undef DEFEVENT
 };
@@ -508,7 +508,7 @@ static PyMethodDef GccMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-static struct 
+static struct
 {
     PyObject *module;
     PyObject *argument_dict;
@@ -570,7 +570,7 @@ PyGcc_init_gcc_module(struct plugin_name_args *plugin_info)
         PyObject *key;
         PyObject *value;
 	PyObject *pair;
-      
+
 	key = PyGccString_FromString(arg->key);
 	if (arg->value) {
             value = PyGccString_FromString(plugin_info->argv[i].value);
@@ -643,7 +643,7 @@ static void PyGcc_run_any_script(void)
     PyObject* script_name;
     FILE *fp;
     int result;
-  
+
     script_name = PyDict_GetItemString(PyGcc_globals.argument_dict, "script");
     if (!script_name) {
         return;
@@ -794,8 +794,8 @@ plugin_init (struct plugin_name_args *plugin_info,
 
     PyGcc_globals.module = PyImport_ImportModule("gcc");
 
-    PyEval_InitThreads();
-  
+    //PyEval_InitThreads();
+
     if (!PyGcc_init_gcc_module(plugin_info)) {
         return 1;
     }
