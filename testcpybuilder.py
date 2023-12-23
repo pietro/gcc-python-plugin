@@ -25,8 +25,6 @@ import sysconfig
 import tempfile
 import unittest
 
-import six
-
 from cpybuilder import *
 
 def get_module_filename(name):
@@ -48,7 +46,7 @@ class CompilationError(CommandError):
     def __init__(self, bm):
         CommandError.__init__(self, bm.out, bm.err, bm.p)
         self.bm = bm
-    
+
     def _describe_activity(self):
         return 'compiling: %s' % ' '.join(self.bm.args)
 
@@ -96,9 +94,8 @@ class BuiltModule:
         # Invoke the compiler:
         self.p = Popen(self.args, env=env, stdout=PIPE, stderr=PIPE)
         self.out, self.err = self.p.communicate()
-        if six.PY3:
-            self.out = self.out.decode()
-            self.err = self.err.decode()
+        self.out = self.out.decode()
+        self.err = self.err.decode()
         c = self.p.wait()
         if c != 0:
             raise CompilationError(self)
@@ -158,7 +155,7 @@ example_hello(PyObject *self, PyObject *args)
         sys.path.append(bm.tmpdir)
         import simple_compilation
         self.assertEqual(simple_compilation.hello(), 'Hello world!')
-        
+
         # Cleanup successful test runs:
         bm.cleanup()
 
@@ -213,7 +210,7 @@ struct PyExampleType {
         # "sys.version_info(major=2, minor=7, micro=1, releaselevel='final', serial=0)"
         # "sys.version_info(major=3, minor=2, micro=0, releaselevel='candidate', serial=1)"
 
-                         
+
 
 
 if __name__ == '__main__':

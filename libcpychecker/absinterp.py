@@ -19,7 +19,7 @@ import gcc
 import gccutils
 import re
 import sys
-from six import StringIO, integer_types
+from io import StringIO
 
 from gccutils import get_src_for_loc, get_nonnull_arguments, check_isinstance
 from gccutils.graph.stmtgraph import StmtGraph, StmtNode
@@ -31,7 +31,7 @@ from libcpychecker.diagnostics import location_as_json, type_as_json
 
 debug_comparisons = 0
 
-numeric_types = integer_types + (float, )
+numeric_types = (int, float)
 
 # I found myself regularly getting State and Transition instances confused.  To
 # ameliorate that, here are some naming conventions and abbreviations:
@@ -3120,4 +3120,3 @@ class StateGraph:
 
 def extra_text(msg, indent):
     sys.stderr.write('%s%s\n' % ('  ' * indent, msg))
-

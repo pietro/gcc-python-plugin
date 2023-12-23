@@ -42,6 +42,7 @@
 #   exitcode = integer value, for overriding defaults
 #
 
+import configparser
 import glob
 import os
 import multiprocessing
@@ -49,9 +50,6 @@ import re
 import sys
 from distutils.sysconfig import get_python_inc
 from subprocess import Popen, PIPE
-
-import six
-from six.moves import configparser
 
 from cpybuilder import CommandError
 
@@ -79,19 +77,18 @@ class TestStream:
                 expdata = f.read()
             # The expected data is for Python 2
             # Apply python3 fixups as necessary:
-            if six.PY3:
-                expdata = expdata.replace('<type ', '<class ')
-                expdata = expdata.replace('__builtin__', 'builtins')
-                # replace long literals with int literals:
-                expdata = re.sub('([0-9]+)L', '\g<1>', expdata)
-                expdata = re.sub('(0x[0-9a-f]+)L', '\g<1>', expdata)
-                expdata = expdata.replace('PyStringObject',
-                                          'PyBytesObject')
-                expdata = expdata.replace('PyString_Type',
-                                          'PyBytes_Type')
+            expdata = expdata.replace('<type ', '<class ')
+            expdata = expdata.replace('__builtin__', 'builtins')
+            # replace long literals with int literals:
+            expdata = re.sub('([0-9]+)L', '\g<1>', expdata)
+            expdata = re.sub('(0x[0-9a-f]+)L', '\g<1>', expdata)
+            expdata = expdata.replace('PyStringObject',
+                                      'PyBytesObject')
+            expdata = expdata.replace('PyString_Type',
+                                      'PyBytes_Type')
             # The expected data is for 64-bit builds of Python
             # Fix it up for 32-bit builds as necessary:
-            if six.MAXSIZE == 0x7fffffff:
+            if sys.maxsize < 2**32:
                 expdata = expdata.replace('"Py_ssize_t *" (pointing to 64 bits)',
                                           '"Py_ssize_t *" (pointing to 32 bits)')
                 expdata = expdata.replace('0x8000000000000000', '0x80000000')
@@ -350,9 +347,8 @@ def run_test(testdir, srcdir):
     if os.path.exists(getopts_py):
         p = Popen([sys.executable, getopts_py], stdout=PIPE, stderr=PIPE)
         opts_out, opts_err = p.communicate()
-        if six.PY3:
-            opts_out = opts_out.decode()
-            opts_err = opts_err.decode()
+        opts_out = opts_out.decode()
+        opts_err = opts_err.decode()
         c = p.wait()
         if c != 0:
             raise CommandError()
@@ -379,9 +375,8 @@ def run_test(testdir, srcdir):
     # Invoke the compiler:
     p = Popen(args, env=env, stdout=PIPE, stderr=PIPE)
     out.actual, err.actual = p.communicate()
-    if six.PY3:
-        out.actual = out.actual.decode()
-        err.actual = err.actual.decode()
+    out.actual = out.actual.decode()
+    err.actual = err.actual.decode()
     #print 'out: %r' % out.actual
     #print 'err: %r' % err.actual
     exitcode_actual = p.wait()
@@ -480,7 +475,7 @@ if options.excluded_dirs:
         exclude_tests_below(path)
 
 # Certain tests don't work on 32-bit
-if six.MAXSIZE == 0x7fffffff:
+if sys.maxsize < 2**32:
     # These two tests verify that we can detect int vs Py_ssize_t mismatches,
     # but on 32-bit these are the same type, so don't find anything:
     exclude_test('tests/cpychecker/PyArg_ParseTuple/with_PY_SSIZE_T_CLEAN')
@@ -508,40 +503,39 @@ if six.MAXSIZE == 0x7fffffff:
     exclude_test('tests/plugin/gimple-walk-tree/find-one')
 
 # Certain tests don't work for Python 3:
-if six.PY3:
-    # The PyInt_ API doesn't exist anymore in Python 3:
-    exclude_tests_below('tests/cpychecker/refcounts/PyInt_AsLong/')
-    exclude_tests_below('tests/cpychecker/refcounts/PyInt_FromLong/')
+# The PyInt_ API doesn't exist anymore in Python 3:
+exclude_tests_below('tests/cpychecker/refcounts/PyInt_AsLong/')
+exclude_tests_below('tests/cpychecker/refcounts/PyInt_FromLong/')
 
-    # Similarly for the PyString_ API:
-    exclude_tests_below('tests/cpychecker/refcounts/PyString_AsString')
-    exclude_tests_below('tests/cpychecker/refcounts/PyString_Concat')
-    exclude_tests_below('tests/cpychecker/refcounts/PyString_ConcatAndDel')
-    exclude_tests_below('tests/cpychecker/refcounts/PyString_FromStringAndSize')
-    exclude_tests_below('tests/cpychecker/refcounts/PyString_Size')
+# Similarly for the PyString_ API:
+exclude_tests_below('tests/cpychecker/refcounts/PyString_AsString')
+exclude_tests_below('tests/cpychecker/refcounts/PyString_Concat')
+exclude_tests_below('tests/cpychecker/refcounts/PyString_ConcatAndDel')
+exclude_tests_below('tests/cpychecker/refcounts/PyString_FromStringAndSize')
+exclude_tests_below('tests/cpychecker/refcounts/PyString_Size')
 
-    # The PyCObject_ API was removed in 3.2:
-    exclude_tests_below('tests/cpychecker/refcounts/PyCObject_FromVoidPtr')
-    exclude_tests_below('tests/cpychecker/refcounts/PyCObject_FromVoidPtrAndDesc')
+# The PyCObject_ API was removed in 3.2:
+exclude_tests_below('tests/cpychecker/refcounts/PyCObject_FromVoidPtr')
+exclude_tests_below('tests/cpychecker/refcounts/PyCObject_FromVoidPtrAndDesc')
 
-    # The following tests happen to use PyInt or PyString APIs and thus we
-    # exclude them for now:
-    exclude_test('tests/cpychecker/refcounts/function-that-exits') # PyString
-    exclude_test('tests/cpychecker/refcounts/GIL/correct') # PyString
-    exclude_test('tests/cpychecker/refcounts/handle_null_error') # PyString
-    exclude_test('tests/cpychecker/refcounts/PyArg_ParseTuple/correct_O_bang') # PyString
-    exclude_test('tests/cpychecker/refcounts/PyObject_CallMethodObjArgs/correct') # PyString
-    exclude_test('tests/cpychecker/refcounts/PyObject_CallMethodObjArgs/incorrect') # PyString
-    exclude_test('tests/cpychecker/refcounts/PyStructSequence/correct') # PyInt
-    exclude_test('tests/cpychecker/refcounts/PySys_SetObject/correct') # PyString
-    exclude_test('tests/cpychecker/refcounts/subclass/handling') # PyString
+# The following tests happen to use PyInt or PyString APIs and thus we
+# exclude them for now:
+exclude_test('tests/cpychecker/refcounts/function-that-exits') # PyString
+exclude_test('tests/cpychecker/refcounts/GIL/correct') # PyString
+exclude_test('tests/cpychecker/refcounts/handle_null_error') # PyString
+exclude_test('tests/cpychecker/refcounts/PyArg_ParseTuple/correct_O_bang') # PyString
+exclude_test('tests/cpychecker/refcounts/PyObject_CallMethodObjArgs/correct') # PyString
+exclude_test('tests/cpychecker/refcounts/PyObject_CallMethodObjArgs/incorrect') # PyString
+exclude_test('tests/cpychecker/refcounts/PyStructSequence/correct') # PyInt
+exclude_test('tests/cpychecker/refcounts/PySys_SetObject/correct') # PyString
+exclude_test('tests/cpychecker/refcounts/subclass/handling') # PyString
 
-    # Module handling is very different in Python 2 vs 3.  For now, only run
-    # this test for Python 2:
-    exclude_test('tests/cpychecker/refcounts/module_handling')
+# Module handling is very different in Python 2 vs 3.  For now, only run
+# this test for Python 2:
+exclude_test('tests/cpychecker/refcounts/module_handling')
 
-    # Uses METH_OLDARGS:
-    exclude_test('tests/cpychecker/refcounts/PyArg_Parse/correct_simple')
+# Uses METH_OLDARGS:
+exclude_test('tests/cpychecker/refcounts/PyArg_Parse/correct_simple')
 
 # Certain tests don't work for debug builds of Python:
 if hasattr(sys, 'gettotalrefcount'):
@@ -721,45 +715,44 @@ if GCC_VERSION >= 5000:
     exclude_test('tests/plugin/rtl')
 
     # Various tests failing with Python 3 with GCC 5:
-    if six.PY3:
-        exclude_test('tests/cpychecker/absinterp/arithmetic/division-by-zero/definite')
-        exclude_test('tests/cpychecker/absinterp/arithmetic/division-by-zero/possible')
-        exclude_test('tests/cpychecker/absinterp/arithmetic/negative-shift/possible')
-        exclude_test('tests/cpychecker/absinterp/arrays3')
-        exclude_test('tests/cpychecker/absinterp/arrays6')
-        exclude_test('tests/cpychecker/absinterp/arrays7')
-        exclude_test('tests/cpychecker/absinterp/bitfields/reading')
-        exclude_test('tests/cpychecker/absinterp/custom-strdup')
-        exclude_test('tests/cpychecker/absinterp/function-pointers')
-        exclude_test('tests/cpychecker/absinterp/nested-fields2')
-        exclude_test('tests/cpychecker/absinterp/nested-fields3')
-        exclude_test('tests/cpychecker/absinterp/read-through-global-ptr-unchecked')
-        exclude_test('tests/cpychecker/absinterp/read-through-uninitialized-ptr')
-        exclude_test('tests/cpychecker/absinterp/uninitialized-data')
-        exclude_test('tests/cpychecker/absinterp/write-through-arg-unchecked')
-        exclude_test('tests/cpychecker/absinterp/write-through-global-ptr-unchecked')
-        exclude_test('tests/cpychecker/refcounts/PyArg_UnpackTuple/missing-initialization')
-        exclude_test('tests/cpychecker/refcounts/PyArg_UnpackTuple/wrong-number-of-varargs')
-        exclude_test('tests/cpychecker/refcounts/PyDict_GetItem/correct')
-        exclude_test('tests/cpychecker/refcounts/PyDict_GetItem/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyDict_GetItemString/correct')
-        exclude_test('tests/cpychecker/refcounts/PyDict_GetItemString/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyDict_SetItem/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyErr_NewException/basic')
-        exclude_test('tests/cpychecker/refcounts/PyEval_CallMethod/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyList_Append/ticket-19')
-        exclude_test('tests/cpychecker/refcounts/PyList_GetItem/correct')
-        exclude_test('tests/cpychecker/refcounts/PyObject_GetAttr/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyObject_GetAttrString/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyObject_HasAttrString/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyTuple_GetItem/correct')
-        exclude_test('tests/cpychecker/refcounts/PyTuple_GetItem/incorrect')
-        exclude_test('tests/cpychecker/refcounts/PyTuple_Size/incorrect')
-        exclude_test('tests/cpychecker/refcounts/passing_dead_object')
-        exclude_test('tests/cpychecker/refcounts/too_many_increfs')
-        exclude_test('tests/cpychecker/refcounts/uninitialized_data/comparison')
-        exclude_test('tests/cpychecker/refcounts/uninitialized_data/function_arg')
-        exclude_test('tests/cpychecker/refcounts/use_after_dealloc')
+    exclude_test('tests/cpychecker/absinterp/arithmetic/division-by-zero/definite')
+    exclude_test('tests/cpychecker/absinterp/arithmetic/division-by-zero/possible')
+    exclude_test('tests/cpychecker/absinterp/arithmetic/negative-shift/possible')
+    exclude_test('tests/cpychecker/absinterp/arrays3')
+    exclude_test('tests/cpychecker/absinterp/arrays6')
+    exclude_test('tests/cpychecker/absinterp/arrays7')
+    exclude_test('tests/cpychecker/absinterp/bitfields/reading')
+    exclude_test('tests/cpychecker/absinterp/custom-strdup')
+    exclude_test('tests/cpychecker/absinterp/function-pointers')
+    exclude_test('tests/cpychecker/absinterp/nested-fields2')
+    exclude_test('tests/cpychecker/absinterp/nested-fields3')
+    exclude_test('tests/cpychecker/absinterp/read-through-global-ptr-unchecked')
+    exclude_test('tests/cpychecker/absinterp/read-through-uninitialized-ptr')
+    exclude_test('tests/cpychecker/absinterp/uninitialized-data')
+    exclude_test('tests/cpychecker/absinterp/write-through-arg-unchecked')
+    exclude_test('tests/cpychecker/absinterp/write-through-global-ptr-unchecked')
+    exclude_test('tests/cpychecker/refcounts/PyArg_UnpackTuple/missing-initialization')
+    exclude_test('tests/cpychecker/refcounts/PyArg_UnpackTuple/wrong-number-of-varargs')
+    exclude_test('tests/cpychecker/refcounts/PyDict_GetItem/correct')
+    exclude_test('tests/cpychecker/refcounts/PyDict_GetItem/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyDict_GetItemString/correct')
+    exclude_test('tests/cpychecker/refcounts/PyDict_GetItemString/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyDict_SetItem/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyErr_NewException/basic')
+    exclude_test('tests/cpychecker/refcounts/PyEval_CallMethod/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyList_Append/ticket-19')
+    exclude_test('tests/cpychecker/refcounts/PyList_GetItem/correct')
+    exclude_test('tests/cpychecker/refcounts/PyObject_GetAttr/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyObject_GetAttrString/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyObject_HasAttrString/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyTuple_GetItem/correct')
+    exclude_test('tests/cpychecker/refcounts/PyTuple_GetItem/incorrect')
+    exclude_test('tests/cpychecker/refcounts/PyTuple_Size/incorrect')
+    exclude_test('tests/cpychecker/refcounts/passing_dead_object')
+    exclude_test('tests/cpychecker/refcounts/too_many_increfs')
+    exclude_test('tests/cpychecker/refcounts/uninitialized_data/comparison')
+    exclude_test('tests/cpychecker/refcounts/uninitialized_data/function_arg')
+    exclude_test('tests/cpychecker/refcounts/use_after_dealloc')
 
 # Tests failing due to repr changes in Python 3.4+
 if sys.version_info[0] == 3 and sys.version_info[1] >= 4:

@@ -17,8 +17,8 @@
 
 # We use this script to regenerate docs/tables-of-passes.rst
 import gcc
+import io
 import sys
-import six
 
 from gccutils import Table
 
@@ -43,7 +43,7 @@ p_to_s = pass_properties_to_str
 
 def foo(t, ps, indent):
     name = ps.name.replace('*', '\\*')
-    t.add_row(('%s%s' % (six.u('> ') * indent, name),
+    t.add_row(('%s%s' % ('> ' * indent, name),
                p_to_s(ps.properties_required),
                p_to_s(ps.properties_provided),
                p_to_s(ps.properties_destroyed)))
@@ -96,7 +96,7 @@ for rootname, reflabel, ps in zip(('The lowering passes',
     t = Table(['Pass Name', 'Required properties', 'Provided properties', 'Destroyed properties'],
               sepchar='=')
     foo(t, ps, 0)
-    s = six.StringIO()
+    s = io.StringIO()
     t.write(s)
     for line in s.getvalue().splitlines():
         print('   ' + line.rstrip())
