@@ -794,7 +794,9 @@ plugin_init (struct plugin_name_args *plugin_info,
 
     PyGcc_globals.module = PyImport_ImportModule("gcc");
 
-    //PyEval_InitThreads();
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION < 7
+    PyEval_InitThreads();
+#endif
 
     if (!PyGcc_init_gcc_module(plugin_info)) {
         return 1;
