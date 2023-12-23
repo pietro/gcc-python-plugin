@@ -781,8 +781,19 @@ plugin_init (struct plugin_name_args *plugin_info,
 
       Suppress the buffering, to better support mixed gcc/python output:
     */
+#if PY_MINOR_VERSION < 8
     Py_UnbufferedStdioFlag = 1;
-#endif
+#else
+    /*
+      Python 3.8 introduced initialization configuration via PyConfig struct.
+      Py_UnbufferedStdioFlag is deprecated on python 3.12.
+    */
+    PyConfig config;
+    PyConfig_InitPythonConfig(&config);
+    config.configure_c_stdio =1;
+    config.buffered_stdio = 1;
+#endif // PY_MAJOR_VERSION >= 3
+#endif // PY_MINOR_VERSION < 8
 
     PyImport_AppendInittab("gcc", PyInit_gcc);
 
