@@ -73,15 +73,7 @@ On a Fedora box you can install them by running the following as root:
 
 .. code-block:: bash
 
-   yum install gcc-plugin-devel python-devel python-pygments graphviz
-
-for building against Python 2, or:
-
-.. code-block:: bash
-
    yum install gcc-plugin-devel python3-devel python3-pygments graphviz
-
-when building for Python 3.
 
 Building the code
 ------------------

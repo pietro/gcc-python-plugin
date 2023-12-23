@@ -68,7 +68,7 @@ GCCPLUGINS_DIR:= $(shell $(CC) --print-file-name=plugin)
 
 GENERATOR_DEPS=cpybuilder.py wrapperbuilder.py print-gcc-version
 
-# The plugin supports both Python 2 and Python 3
+# The plugin supports only Python 3
 #
 # In theory we could have arbitrary combinations of python versions for each
 # of:

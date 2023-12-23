@@ -38,7 +38,7 @@ Requirements
 * GCC plugin development package: usually available in distribution packages
   such as ``gcc-N-plugin-dev`` or ``gcc-plugin-devel``.
 
-* Python: requires 2.7 or 3.2 or later
+* Python: 3.2 or later
 
 
 Usage
