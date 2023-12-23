@@ -105,6 +105,7 @@ PYTHON_CONFIG=python-config
 
 PYTHON_INCLUDES=$(shell $(PYTHON_CONFIG) --includes)
 PYTHON_LIBS=$(shell $(PYTHON) -c 'import sys;print("-lpython%d.%d" % sys.version_info[:2])') $(shell $(PYTHON_CONFIG) --libs)
+PYTHON_LDFLAGS=$(shell $(PYTHON_CONFIG) --ldflags)
 
 # Support having multiple named plugins
 # e.g. "python2.7" "python3.2mu" "python 3.2dmu" etc:
@@ -152,6 +153,7 @@ $(PLUGIN_DSO): $(PLUGIN_OBJECT_FILES) $(LIBGCC_C_API_SO)
 	    $(PLUGIN_OBJECT_FILES) \
 	    -o $@ \
 	    $(LIBS) \
+	    $(PYTHON_LDFLAGS) \
 	    -lgcc-c-api -Lgcc-c-api -Wl,-rpath=$(GCCPLUGINS_DIR)
 
 $(pwd)/gcc-c-api:
@@ -265,7 +267,7 @@ install: $(PLUGIN_DSO) gcc-with-$(PLUGIN_NAME).1.gz
 	cp gcc-with-$(PLUGIN_NAME).1.gz $(DESTDIR)$(mandir)/man1
 
 
-# Hint for debugging: add -v to the gcc options 
+# Hint for debugging: add -v to the gcc options
 # to get a command line for invoking individual subprocesses
 # Doing so seems to require that paths be absolute, rather than relative
 # to this directory
