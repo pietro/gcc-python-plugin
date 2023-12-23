@@ -152,15 +152,6 @@ static unsigned int impl_execute(function *fun)
         return 0;
     }
 
-#if PY_MAJOR_VERSION < 3
-    if (PyInt_Check(result_obj)) {
-        long result = PyInt_AS_LONG(result_obj);
-        Py_DECREF(result_obj);
-        gcc_set_input_location(saved_loc);
-        return result;
-    }
-#endif
-
     if (PyLong_Check(result_obj)) {
         long result = PyLong_AsLong(result_obj);
         Py_DECREF(result_obj);
@@ -683,7 +674,7 @@ real_make_pass_wrapper(void *p)
     /* FIXME: do we need to do something for the GCC GC? */
 
     return (PyObject*)pass_obj;
-      
+
 error:
     return NULL;
 }
@@ -707,7 +698,7 @@ PyGccPass_New(struct opt_pass *pass)
 }
 
 /*
-  PEP-7  
+  PEP-7
 Local variables:
 c-basic-offset: 4
 indent-tabs-mode: nil

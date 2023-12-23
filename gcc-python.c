@@ -898,10 +898,6 @@ PyObject *
 PyGcc_int_from_decimal_string_buffer(const char *buf)
 {
     PyObject *long_obj;
-#if PY_MAJOR_VERSION < 3
-    long long_val;
-    int overflow;
-#endif
     long_obj = PyLong_FromString((char *)buf, NULL, 10);
     if (!long_obj) {
         return NULL;

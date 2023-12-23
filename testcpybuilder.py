@@ -174,11 +174,7 @@ struct PyExampleType {
         sm.cu.add_defn("PyObject *\n"
                        "example_Example_repr(PyObject * self)\n"
                        "{\n"
-                       "#if PY_MAJOR_VERSION < 3\n"
-                       "    return PyString_FromString(\"example.ExampleType('')\");\n"
-                       "#else\n"
                        "    return PyUnicode_FromString(\"example.ExampleType('')\");\n"
-                       "#endif\n"
                        "}\n")
         sm.add_type_object(name = 'example_ExampleType',
                            localname = 'ExampleType',

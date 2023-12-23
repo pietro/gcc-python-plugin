@@ -144,11 +144,7 @@ PyTypeObject PyGccWrapperMeta_TypeObj  = {
 #endif
     NULL, /* tp_getattr */
     NULL, /* tp_setattr */
-#if PY_MAJOR_VERSION < 3
-    0, /*tp_compare*/
-#else
     0, /*reserved*/
-#endif
     NULL, /* tp_repr */
     NULL, /* tp_as_number */
     NULL, /* tp_as_sequence */
