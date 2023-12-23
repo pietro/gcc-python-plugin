@@ -5,10 +5,10 @@ on: [push]
 jobs:
   build:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        gcc-version: [10, 11]
+        gcc-version: [10, 11, 12]
         python-version: ["3.11", "3.12"]
 
     steps:
