@@ -38,11 +38,7 @@ less_rigid_code_S(PyObject *self, PyObject *args)
        Both of these ought to be acceptable for code "S":
     */
     PyObject *S_baseobj;
-#if PY_MAJOR_VERSION >= 3
     PyBytesObject *S_subobj;
-#else
-    PyStringObject *S_subobj;
-#endif
 
     if (!PyArg_ParseTuple(args, "SS",
                           &S_baseobj,

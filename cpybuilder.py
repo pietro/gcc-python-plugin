@@ -172,11 +172,7 @@ class PyNumberMethods(NamedEntity):
         result += self.unaryfunc_field('nb_negative')
         result += self.unaryfunc_field('nb_positive')
         result += self.unaryfunc_field('nb_absolute')
-        result += '#if PY_MAJOR_VERSION >= 3\n'
         result += self.c_ptr_field('nb_bool')
-        result += '#else\n'
-        result += self.c_ptr_field('nb_nonzero')
-        result += '#endif\n'
         result += self.unaryfunc_field('nb_invert')
         result += self.c_ptr_field('nb_lshift')
         result += self.c_ptr_field('nb_rshift')
@@ -184,11 +180,7 @@ class PyNumberMethods(NamedEntity):
         result += self.c_ptr_field('nb_xor')
         result += self.c_ptr_field('nb_or')
         result += self.unaryfunc_field('nb_int')
-        result += '#if PY_MAJOR_VERSION >= 3\n'
         result += self.c_ptr_field('nb_reserved')
-        result += '#else\n'
-        result += self.unaryfunc_field('nb_long')
-        result += '#endif\n'
         result += self.unaryfunc_field('nb_float')
         result += self.c_ptr_field('nb_inplace_add')
         result += self.c_ptr_field('nb_inplace_subtract')
@@ -341,7 +333,6 @@ error:
 
     def c_py3k_moduledef(self):
         return ("""
-#if PY_MAJOR_VERSION >= 3
 static PyModuleDef %(modname)smodule = {
     PyModuleDef_HEAD_INIT,
     "%(modname)s", /* m_name */
@@ -350,7 +341,6 @@ static PyModuleDef %(modname)smodule = {
     %(modmethods_as_ptr)s, /* m_methods */
     NULL, NULL, NULL, NULL
 };
-#endif
 """ % self.__dict__)
 
 

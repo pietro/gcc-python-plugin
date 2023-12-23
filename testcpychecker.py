@@ -152,11 +152,7 @@ socket_htons(PyObject *self, PyObject *args)
         return NULL;
     }
     x2 = (int)htons((short)x1);
-#if PY_MAJOR_VERSION >= 3
     return PyLong_FromLong(x2);
-#else
-    return PyInt_FromLong(x2);
-#endif
 }
 """
         self.assertFindsError(src,

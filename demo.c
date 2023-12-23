@@ -22,12 +22,6 @@
 
 extern uint16_t htons(uint16_t hostshort);
 
-#if PY_MAJOR_VERSION >= 3
-#define PYINT_FROMLONG(l) (PyLong_FromLong(l))
-#else
-#define PYINT_FROMLONG(l) (PyInt_FromLong(l))
-#endif
-
 PyObject *
 socket_htons(PyObject *self, PyObject *args)
 {
@@ -37,7 +31,7 @@ socket_htons(PyObject *self, PyObject *args)
         return NULL;
     }
     x2 = (int)htons((short)x1);
-    return PYINT_FROMLONG(x2);
+    return PyLong_FromLong(x2);
 }
 
 PyObject *
