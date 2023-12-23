@@ -23,6 +23,11 @@
 
 /* Compatibility macros */
 
+/* GCC 11 renamed DECL_IS_BUILTIN */
+#if (GCC_VERSION >= 11000)
+#define DECL_IS_BUILTIN(x) DECL_IS_UNDECLARED_BUILTIN(x)
+#endif
+
 /* For declarations: */
 #define GCC_PUBLIC_API(RETURN_TYPE) extern RETURN_TYPE
 #define GCC_PRIVATE_API(RETURN_TYPE) extern RETURN_TYPE
