@@ -1,0 +1,39 @@
+name: Build and test
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        gcc-version: [10]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GCC ${{ matrix.gcc-version }}
+        run: sudo apt-get install g++-${{matrix.gcc-version}} gcc-${{matrix.gcc-version}}-plugin-dev
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display GCC version
+        run: gcc-${{matrix.gcc-version}} --version
+
+      - name: Display Python version
+        run: python -c "import sys; print(sys.version)"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade six pygments lxml setuptools
+
+      - name: Build
+        run: |
+          export CC=gcc-${{matrix.gcc-version}}
+          export CXX=g++-${{matrix.gcc-version}}
+          export PYTHON_CONFIG=python3-config
+          make PYTHON_CONFIG=$PYTHON_CONFIG

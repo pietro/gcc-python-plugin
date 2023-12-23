@@ -66,7 +66,7 @@ class CompilationError(CommandError):
     def __init__(self, out, err, p, args):
         CommandError.__init__(self, out, err, p)
         self.args = args
-        
+
     def _describe_activity(self):
         return 'compiling: %s' % ' '.join(self.args)
 
@@ -231,7 +231,7 @@ class UnexpectedOutput(CompilationError):
         CompilationError.__init__(self, out, err, p, args)
         self.stream = stream
         self.label = label
-    
+
     def _extra_info(self):
         return self.stream.diff(self.label)
 
@@ -286,7 +286,7 @@ def run_test(testdir, srcdir):
     out = TestStream(os.path.join(testdir, 'stdout.txt'), srcdir)
     err = TestStream(os.path.join(testdir, 'stderr.txt'), srcdir)
 
-    cp = configparser.SafeConfigParser()
+    cp = configparser.ConfigParser()
     metadatapath = os.path.join(testdir, 'metadata.ini')
     cp.read([metadatapath])
 
@@ -418,7 +418,7 @@ def run_test(testdir, srcdir):
 
     if exitcode_expected == 0:
         assert os.path.exists(outfile)
-    
+
     out.check_for_diff(out.actual, err.actual, p, args, 'stdout', WRITEBACK)
     err.check_for_diff(out.actual, err.actual, p, args, 'stderr', WRITEBACK)
 
