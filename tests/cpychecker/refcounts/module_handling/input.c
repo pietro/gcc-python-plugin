@@ -27,7 +27,6 @@ static PyMethodDef ExampleMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-#if PY_MAJOR_VERSION == 3
 static struct PyModuleDef example_module_def = {
     PyModuleDef_HEAD_INIT,
     "example",   /* name of module */
@@ -35,7 +34,6 @@ static struct PyModuleDef example_module_def = {
     -1,
     ExampleMethods
 };
-#endif
 
 #define MY_INT_MACRO     (42)
 #define MY_STRING_MACRO  ("Arthur")
@@ -44,11 +42,7 @@ static PyMODINIT_FUNC PyInit_example(void)
 {
     PyObject *m;
     PyObject *obj;
-#if PY_MAJOR_VERSION == 3
     m = PyModule_Create(&example_module_def);
-#else
-    m = Py_InitModule("example", ExampleMethods);
-#endif
 
     if (!m) {
         goto error;
@@ -72,11 +66,7 @@ static PyMODINIT_FUNC PyInit_example(void)
     PyModule_AddStringMacro(m, MY_STRING_MACRO);
 
     error:
-#if PY_MAJOR_VERSION == 3
     return m;
-#else
-    (void)0; /* to avoid "label at end of compound statement" error */
-#endif
 }
 
 /*

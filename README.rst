@@ -38,13 +38,7 @@ Requirements
 * GCC plugin development package: usually available in distribution packages
   such as ``gcc-N-plugin-dev`` or ``gcc-plugin-devel``.
 
-* Python: requires 2.7 or 3.2 or later
-
-* "six": The libcpychecker code uses the "six_" Python compatibility library to
-  smooth over Python 2 vs Python 3 differences, both at build-time and
-  run-time
-
-  .. _six: http://pypi.python.org/pypi/six/
+* Python: 3.2 or later
 
 
 Usage

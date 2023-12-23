@@ -185,7 +185,7 @@ DECLARE_SIMPLE_WRAPPER(PyGccPass,
 		       pass,
 		       struct opt_pass *, pass)
 
-DECLARE_SIMPLE_WRAPPER(PyGccLocation, 
+DECLARE_SIMPLE_WRAPPER(PyGccLocation,
 		       PyGccLocation_TypeObj,
 		       location,
 		       gcc_location, loc)
@@ -201,7 +201,7 @@ DECLARE_SIMPLE_WRAPPER(PyGccRichLocation,
 
 #endif
 
-DECLARE_SIMPLE_WRAPPER(PyGccGimple, 
+DECLARE_SIMPLE_WRAPPER(PyGccGimple,
 		       PyGccGimple_TypeObj,
 		       gimple,
 		       gcc_gimple, stmt);
@@ -211,17 +211,17 @@ DECLARE_SIMPLE_WRAPPER(PyGccEdge,
 		       edge,
 		       gcc_cfg_edge, e)
 
-DECLARE_SIMPLE_WRAPPER(PyGccBasicBlock, 
+DECLARE_SIMPLE_WRAPPER(PyGccBasicBlock,
 		       PyGccBasicBlock_TypeObj,
 		       basic_block,
 		       gcc_cfg_block, bb)
 
-DECLARE_SIMPLE_WRAPPER(PyGccCfg, 
+DECLARE_SIMPLE_WRAPPER(PyGccCfg,
 		       PyGccCfg_TypeObj,
 		       cfg,
                        gcc_cfg, cfg)
 
-DECLARE_SIMPLE_WRAPPER(PyGccFunction, 
+DECLARE_SIMPLE_WRAPPER(PyGccFunction,
 		       PyGccFunction_TypeObj,
 		       function,
 		       gcc_function, fun)
@@ -380,8 +380,6 @@ void PyGcc_PrintException(const char *msg);
 PyObject *
 PyGcc_GetReprOfAttribute(PyObject *obj, const char *attrname);
 
-/* Python 2 vs Python 3 compat: */
-#if PY_MAJOR_VERSION == 3
 /* Python 3: use PyUnicode for "str" and PyLong for "int": */
 #define PyGccString_FromFormat PyUnicode_FromFormat
 #define PyGccString_FromString PyUnicode_FromString
@@ -390,16 +388,6 @@ PyGcc_GetReprOfAttribute(PyObject *obj, const char *attrname);
 #define PyGccInt_FromLong PyLong_FromLong
 #define PyGccInt_Check PyLong_Check
 #define PyGccInt_AsLong PyLong_AsLong
-#else
-/* Python 2: use PyString for "str" and PyInt for "int": */
-#define PyGccString_FromFormat PyString_FromFormat
-#define PyGccString_FromString PyString_FromString
-#define PyGccString_FromString_and_size PyString_FromStringAndSize
-#define PyGccString_AsString PyString_AsString
-#define PyGccInt_FromLong PyInt_FromLong
-#define PyGccInt_Check PyInt_Check
-#define PyGccInt_AsLong PyInt_AsLong
-#endif
 
 /*
   PEP-7

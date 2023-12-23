@@ -515,7 +515,6 @@ static struct
     PyObject *argument_tuple;
 } PyGcc_globals;
 
-#if PY_MAJOR_VERSION == 3
 static struct PyModuleDef module_def = {
     PyModuleDef_HEAD_INIT,
     "gcc",   /* name of module */
@@ -523,20 +522,12 @@ static struct PyModuleDef module_def = {
     -1,
     GccMethods
 };
-#endif
 
 PyMODINIT_FUNC PyInit_gcc(void)
 {
-#if PY_MAJOR_VERSION == 3
     PyObject *m;
     m = PyModule_Create(&module_def);
-#else
-    Py_InitModule("gcc", GccMethods);
-#endif
-
-#if PY_MAJOR_VERSION == 3
     return m;
-#endif
 }
 
 static int
@@ -772,7 +763,7 @@ plugin_init (struct plugin_name_args *plugin_info,
         return 1;
     }
 
-#if PY_MAJOR_VERSION >= 3
+
     /*
       Python 3 added internal buffering to sys.stdout and sys.stderr, but this
       leads to unpredictable interleavings of messages from gcc, such as from calling
@@ -781,7 +772,7 @@ plugin_init (struct plugin_name_args *plugin_info,
 
       Suppress the buffering, to better support mixed gcc/python output:
     */
-#if PY_MINOR_VERSION < 8
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION < 8
     Py_UnbufferedStdioFlag = 1;
 #else
     /*
@@ -792,8 +783,7 @@ plugin_init (struct plugin_name_args *plugin_info,
     PyConfig_InitPythonConfig(&config);
     config.configure_c_stdio =1;
     config.buffered_stdio = 1;
-#endif // PY_MAJOR_VERSION >= 3
-#endif // PY_MINOR_VERSION < 8
+#endif
 
     PyImport_AppendInittab("gcc", PyInit_gcc);
 
@@ -898,31 +888,11 @@ PyObject *
 PyGcc_int_from_decimal_string_buffer(const char *buf)
 {
     PyObject *long_obj;
-#if PY_MAJOR_VERSION < 3
-    long long_val;
-    int overflow;
-#endif
     long_obj = PyLong_FromString((char *)buf, NULL, 10);
     if (!long_obj) {
         return NULL;
     }
-#if PY_MAJOR_VERSION >= 3
     return long_obj;
-#else
-    long_val = PyLong_AsLongAndOverflow(long_obj, &overflow);
-    if (overflow) {
-        /* Doesn't fit in a PyIntObject; use the PyLongObject: */
-        return long_obj;
-    } else {
-        /* Fits in a PyIntObject: use that */
-        PyObject *int_obj = PyInt_FromLong(long_val);
-        if (!int_obj) {
-            return long_obj;
-        }
-        Py_DECREF(long_obj);
-        return int_obj;
-    }
-#endif
 }
 
 #if (GCC_VERSION < 5000)

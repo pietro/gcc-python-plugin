@@ -21,8 +21,6 @@ from subprocess import Popen, PIPE
 import sys
 import unittest
 
-import six
-
 from testcpybuilder import BuiltModule, SimpleModule, CompilationError
 from cpybuilder import PyMethodTable, PyMethodDef, METH_VARARGS
 
@@ -50,7 +48,7 @@ class ExpectedErrorNotFound(CompilationError):
         result += '    ' + self.bm.srcfile + '\n'
         result += '  using:\n'
         result += '    ' + ' '.join(self.bm.args) + '\n'
-        
+
         from difflib import unified_diff
         for line in unified_diff(self.expected_err.splitlines(),
                                  self.actual_err.splitlines(),
@@ -133,13 +131,13 @@ class PyArg_ParseTupleTests(AnalyzerTests):
         experr = ("$(SRCFILE): In function 'bogus_format_string':\n"
                   '$(SRCFILE):12:26: error: unknown format char in "This is not a valid format string": \'T\' [-Werror]\n')
         self.assertFindsError(src, experr)
-                   
+
     def test_finding_htons_error(self):
         #  Erroneous argument parsing of socket.htons() on 64bit big endian
         #  machines from CPython's Modules/socket.c; was fixed in svn r34931
         #  FIXME: the original had tab indentation, but what does this mean
         # for "column" offsets in the output?
-        if six.MAXSIZE == 0x7fffffff:
+        if sys.maxsize < 2**32:
             raise unittest.SkipTest('Test assumes a 64-bit machine')
 
         src = """
@@ -154,11 +152,7 @@ socket_htons(PyObject *self, PyObject *args)
         return NULL;
     }
     x2 = (int)htons((short)x1);
-#if PY_MAJOR_VERSION >= 3
     return PyLong_FromLong(x2);
-#else
-    return PyInt_FromLong(x2);
-#endif
 }
 """
         self.assertFindsError(src,
@@ -311,13 +305,13 @@ correct_usage(PyObject *self, PyObject *args)
             colnum = self.get_colnum()
             experr = self.get_expected_error() % locals()
             bm = self.assertFindsError(src, experr)
-                                       
+
         _test_correct_usage_of_format_code(self, code, typenames)
         _test_incorrect_usage_of_format_code(self, code, typenames, exptypenames)
 
     # The following test cases are intended to be in the same order as the API
     # documentation at http://docs.python.org/c-api/arg.html
-        
+
     def test_format_code_s(self):
         self._test_format_code('s', 'const char *')
 

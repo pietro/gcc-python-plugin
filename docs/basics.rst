@@ -27,12 +27,6 @@ The plugin has the following requirements:
 
   * Python: requires 2.7 or 3.2 or later
 
-  * "six": The libcpychecker code uses the "six" Python compatibility library to
-    smooth over Python 2 vs Python 3 differences, both at build-time and
-    run-time:
-
-       http://pypi.python.org/pypi/six/
-
   * "pygments": The libcpychecker code uses the "pygments" Python
     syntax-highlighting library when writing out error reports:
 
@@ -79,15 +73,7 @@ On a Fedora box you can install them by running the following as root:
 
 .. code-block:: bash
 
-   yum install gcc-plugin-devel python-devel python-six python-pygments graphviz
-
-for building against Python 2, or:
-
-.. code-block:: bash
-
-   yum install gcc-plugin-devel python3-devel python3-six python3-pygments graphviz
-
-when building for Python 3.
+   yum install gcc-plugin-devel python3-devel python3-pygments graphviz
 
 Building the code
 ------------------
