@@ -1292,7 +1292,13 @@ PyGcc_TreeMakeListOfPairsFromTreeListChain(tree t)
        if (!purpose) {
            goto error;
        }
-       value = PyGccTree_New(gcc_private_make_tree(TREE_VALUE(t)));
+
+       // GCC 13+ returns a CONST_DECL instead of an INTEGER_CST
+#if (GCC_VERSION >= 13000)
+       value  = PyGccTree_New(gcc_private_make_tree(DECL_INITIAL(TREE_VALUE(t))));
+#else
+       value  = PyGccTree_New(gcc_private_make_tree(TREE_VALUE(t)));
+#endif
        if (!value) {
            Py_DECREF(purpose);
            goto error;
