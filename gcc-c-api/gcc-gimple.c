@@ -114,7 +114,39 @@ GCC_IMPLEMENT_PUBLIC_API (gcc_tree) gcc_gimple_get_block (gcc_gimple stmt)
 
 GCC_IMPLEMENT_PUBLIC_API (gcc_tree) gcc_gimple_get_expr_type (gcc_gimple stmt)
 {
-  return gcc_private_make_tree (gimple_expr_type (stmt.inner));
+  tree result;
+  switch (gimple_code (stmt.inner))
+  {
+  case GIMPLE_CALL:
+  {
+    const gcall *gimple_call = as_a <const gcall *> (stmt.inner);
+    result = gimple_call_return_type (gimple_call);
+  }
+  break;
+
+  case GIMPLE_ASSIGN:
+  {
+    result = TREE_TYPE (gimple_assign_lhs (stmt.inner));
+  }
+  break;
+
+  case GIMPLE_COND:
+  {
+    result = boolean_type_node;
+  }
+  break;
+
+  case GIMPLE_PHI:
+  {
+    result = TREE_TYPE (gimple_phi_result (stmt.inner));
+  }
+  break;
+
+  default:
+    result =  void_type_node;
+  }
+
+    return gcc_private_make_tree (result);
 }
 
 /***************************************************************************
