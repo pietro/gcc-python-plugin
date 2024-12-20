@@ -118,9 +118,8 @@ def main(**kwargs):
                           register_our_attributes)
 
     # Hook for GCC 4.7 and later:
-    if hasattr(gcc, 'PLUGIN_FINISH_DECL'):
-        gcc.register_callback(gcc.PLUGIN_FINISH_DECL,
-                              on_finish_decl)
+    #if hasattr(gcc, 'PLUGIN_FINISH_DECL'):
+    gcc.register_callback(gcc.PLUGIN_FINISH_DECL, on_finish_decl)
 
     # Register our GCC passes:
     gimple_ps = CpyCheckerGimplePass(**kwargs)

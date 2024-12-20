@@ -1,13 +1,19 @@
 Help on class CallgraphNode in module gcc:
 
-class CallgraphNode(__builtin__.object)
+class CallgraphNode(builtins.object)
  |  Methods defined here:
  |  
- |  __repr__(...)
- |      x.__repr__() <==> repr(x)
+ |  __repr__(self, /)
+ |      Return repr(self).
  |  
- |  __str__(...)
- |      x.__str__() <==> str(x)
+ |  __str__(self, /)
+ |      Return str(self).
+ |  
+ |  ----------------------------------------------------------------------
+ |  Static methods defined here:
+ |  
+ |  __new__(*args, **kwargs) from gcc.WrapperMeta
+ |      Create and return a new object.  See help(type) for accurate signature.
  |  
  |  ----------------------------------------------------------------------
  |  Data descriptors defined here:
@@ -20,23 +26,23 @@ class CallgraphNode(__builtin__.object)
  |  
  |  decl
  |      The gcc.FunctionDecl for this node
- |  
- |  ----------------------------------------------------------------------
- |  Data and other attributes defined here:
- |  
- |  __new__ = <built-in method __new__ of gcc.WrapperMeta object>
- |      T.__new__(S, ...) -> a new object with type S, a subtype of T
 
 Help on class CallgraphEdge in module gcc:
 
-class CallgraphEdge(__builtin__.object)
+class CallgraphEdge(builtins.object)
  |  Methods defined here:
  |  
- |  __repr__(...)
- |      x.__repr__() <==> repr(x)
+ |  __repr__(self, /)
+ |      Return repr(self).
  |  
- |  __str__(...)
- |      x.__str__() <==> str(x)
+ |  __str__(self, /)
+ |      Return str(self).
+ |  
+ |  ----------------------------------------------------------------------
+ |  Static methods defined here:
+ |  
+ |  __new__(*args, **kwargs) from gcc.WrapperMeta
+ |      Create and return a new object.  See help(type) for accurate signature.
  |  
  |  ----------------------------------------------------------------------
  |  Data descriptors defined here:
@@ -49,12 +55,6 @@ class CallgraphEdge(__builtin__.object)
  |  
  |  caller
  |      The function that makes this call, as a gcc.CallgraphNode
- |  
- |  ----------------------------------------------------------------------
- |  Data and other attributes defined here:
- |  
- |  __new__ = <built-in method __new__ of gcc.WrapperMeta object>
- |      T.__new__(S, ...) -> a new object with type S, a subtype of T
 
 cgn:
   cgn.decl: gcc.FunctionDecl('baz')

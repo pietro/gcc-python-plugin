@@ -1,26 +1,23 @@
 Help on class Rtl in module gcc:
 
-class Rtl(__builtin__.object)
+class Rtl(builtins.object)
  |  Methods defined here:
  |  
- |  __repr__(...)
- |      x.__repr__() <==> repr(x)
+ |  __repr__(self, /)
+ |      Return repr(self).
  |  
- |  __str__(...)
- |      x.__str__() <==> str(x)
+ |  __str__(self, /)
+ |      Return str(self).
+ |  
+ |  ----------------------------------------------------------------------
+ |  Static methods defined here:
+ |  
+ |  __new__(*args, **kwargs) from gcc.WrapperMeta
+ |      Create and return a new object.  See help(type) for accurate signature.
  |  
  |  ----------------------------------------------------------------------
  |  Data descriptors defined here:
  |  
- |  loc
- |      Source code location of this expression, as a gcc.Location
- |  
  |  operands
  |      Operands of this expression, as a tuple
- |  
- |  ----------------------------------------------------------------------
- |  Data and other attributes defined here:
- |  
- |  __new__ = <built-in method __new__ of gcc.WrapperMeta object>
- |      T.__new__(S, ...) -> a new object with type S, a subtype of T
 

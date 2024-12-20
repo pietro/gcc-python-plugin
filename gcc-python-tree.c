@@ -279,13 +279,13 @@ PyGccTree_richcompare(PyObject *o1, PyObject *o2, int op)
 }
 
 PyObject *
-PyGccTree_get_str_no_uid(struct PyGccTree *self, void *closure)
+PyGccTree_get_str_no_uid(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     return do_pretty_print(self, 0, TDF_NOUID);
 }
 
 PyObject *
-PyGccTree_get_symbol(PyObject *cls, PyObject *args)
+PyGccTree_get_symbol(PyObject *cls, PyObject *args ATTRIBUTE_UNUSED)
 {
     enum tree_code code;
 
@@ -328,7 +328,7 @@ error:
 }
 
 PyObject *
-PyGccFunctionDecl_get_fullname(struct PyGccTree *self, void *closure)
+PyGccFunctionDecl_get_fullname(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     const char *str;
 
@@ -345,7 +345,7 @@ PyGccFunctionDecl_get_fullname(struct PyGccTree *self, void *closure)
 }
 
 PyObject *
-PyGccFunctionDecl_get_callgraph_node(struct PyGccTree *self, void *closure)
+PyGccFunctionDecl_get_callgraph_node(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     /* cgraph_get_node became cgraph_node::get in 5.0 */
     struct cgraph_node *node;
@@ -427,7 +427,7 @@ PyGccIdentifierNode_repr(struct PyGccTree * self)
 }
 
 PyObject *
-PyGccType_get_attributes(struct PyGccTree *self, void *closure)
+PyGccType_get_attributes(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     /* gcc/tree.h defines TYPE_ATTRIBUTES(NODE) as:
        "A TREE_LIST of IDENTIFIER nodes of the attributes that apply
@@ -483,7 +483,7 @@ PyGccType_get_attributes(struct PyGccTree *self, void *closure)
 __typeof__ (c_sizeof_or_alignof_type) c_sizeof_or_alignof_type __attribute__ ((weak));
 
 PyObject *
-PyGccType_get_sizeof(struct PyGccTree *self, void *closure)
+PyGccType_get_sizeof(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     if (NULL == c_sizeof_or_alignof_type) {
         return raise_not_during_lto("Type.sizeof");
@@ -521,7 +521,7 @@ PyGccType_get_sizeof(struct PyGccTree *self, void *closure)
 __typeof__ (c_common_signed_type) c_common_signed_type __attribute__ ((weak));
 
 PyObject *
-PyGccIntegerType_get_signed_equivalent(struct PyGccTree * self, void *closure)
+PyGccIntegerType_get_signed_equivalent(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     if (NULL == c_common_signed_type)
         return raise_not_during_lto("gcc.IntegerType.signed_equivalent");
@@ -532,7 +532,7 @@ PyGccIntegerType_get_signed_equivalent(struct PyGccTree * self, void *closure)
 __typeof__ (c_common_unsigned_type) c_common_unsigned_type __attribute__ ((weak));
 
 PyObject *
-PyGccIntegerType_get_unsigned_equivalent(struct PyGccTree * self, void *closure)
+PyGccIntegerType_get_unsigned_equivalent(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     if (NULL == c_common_unsigned_type)
         return raise_not_during_lto("gcc.IntegerType.unsigned_equivalent");
@@ -562,7 +562,7 @@ PyGccIntegerType_repr(struct PyGccTree * self)
 }
 
 PyObject *
-PyGccFunction_TypeObj_get_argument_types(struct PyGccTree * self, void *closure)
+PyGccFunction_TypeObj_get_argument_types(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     PyObject *result;
     PyObject *item;
@@ -603,7 +603,7 @@ PyGccFunction_TypeObj_get_argument_types(struct PyGccTree * self, void *closure)
 }
 
 PyObject *
-PyGccFunction_TypeObj_is_variadic(struct PyGccTree * self, void *closure)
+PyGccFunction_TypeObj_is_variadic(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     tree iter;
     tree head = TYPE_ARG_TYPES(self->t.inner);
@@ -633,7 +633,7 @@ PyGccMethodType_is_variadic(struct PyGccTree * self,void *closure)
 }
 
 PyObject *
-PyGccConstructor_get_elements(PyObject *self, void *closure)
+PyGccConstructor_get_elements(PyObject *self, void *closure ATTRIBUTE_UNUSED)
 {
     struct PyGccTree * self_as_tree;
     PyObject *result = NULL;
@@ -720,7 +720,7 @@ PyGcc_int_from_int_cst(tree int_cst)
 }
 
 PyObject *
-PyGccIntegerConstant_get_constant(struct PyGccTree * self, void *closure)
+PyGccIntegerConstant_get_constant(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     return PyGcc_int_from_int_cst(self->t.inner);
 }
@@ -744,7 +744,7 @@ PyGccIntegerConstant_repr(struct PyGccTree * self)
 }
 
 PyObject *
-PyGccRealCst_get_constant(struct PyGccTree * self, void *closure)
+PyGccRealCst_get_constant(struct PyGccTree * self, void *closure ATTRIBUTE_UNUSED)
 {
     /* "cheat" and go through the string representation: */
     REAL_VALUE_TYPE *d;
@@ -798,7 +798,7 @@ PyGccStringConstant_repr(struct PyGccTree * self)
 }
 
 PyObject *
-PyGccTypeDecl_get_pointer(struct PyGccTree *self, void *closure)
+PyGccTypeDecl_get_pointer(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     tree decl_type = TREE_TYPE(self->t.inner);
     if (!decl_type) {
@@ -809,7 +809,7 @@ PyGccTypeDecl_get_pointer(struct PyGccTree *self, void *closure)
 }
 
 PyObject *
-PyGccTypeDecl_get_original_type(struct PyGccTree *self, void *closure)
+PyGccTypeDecl_get_original_type(struct PyGccTree *self, void *closure ATTRIBUTE_UNUSED)
 {
     tree decl_type = TREE_TYPE(self->t.inner);
     if (!decl_type) {
@@ -967,7 +967,7 @@ PyGccNamespaceDecl_lookup(struct PyGccTree * self, PyObject *args, PyObject *kwa
 }
 
 PyObject *
-PyGccNamespaceDecl_unalias(struct PyGccTree * self, PyObject *args, PyObject *kwargs)
+PyGccNamespaceDecl_unalias(struct PyGccTree * self, PyObject *args ATTRIBUTE_UNUSED, PyObject *kwargs ATTRIBUTE_UNUSED)
 {
   tree t = self->t.inner;
 

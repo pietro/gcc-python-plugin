@@ -94,12 +94,12 @@ static void trace_callback_for_##NAME(void *gcc_data, void *user_data) \
 
 /*
   Weakly import parse_in; it will be non-NULL in the C and C++ frontend,
-  but it's not available lto1 (link-time optimization)
+  but it's not available in lto1 (link-time optimization)
 */
 __typeof__ (parse_in) parse_in __attribute__ ((weak));
 
 static PyObject*
-PyGcc_define_macro(PyObject *self,
+PyGcc_define_macro(PyObject *self ATTRIBUTE_UNUSED,
                         PyObject *args, PyObject *kwargs)
 {
     const char *macro;
@@ -134,7 +134,7 @@ PyGcc_define_macro(PyObject *self,
 }
 
 static PyObject *
-PyGcc_set_location(PyObject *self, PyObject *args)
+PyGcc_set_location(PyObject *self ATTRIBUTE_UNUSED, PyObject *args)
 {
     PyGccLocation *loc_obj;
     if (!PyArg_ParseTuple(args,
@@ -167,7 +167,7 @@ static bool add_option_to_list(gcc_option opt, void *user_data)
 }
 
 static PyObject *
-PyGcc_get_option_list(PyObject *self, PyObject *args)
+PyGcc_get_option_list(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     PyObject *result;
 
@@ -207,7 +207,7 @@ static bool add_option_to_dict(gcc_option opt, void *user_data)
 }
 
 static PyObject *
-PyGcc_get_option_dict(PyObject *self, PyObject *args)
+PyGcc_get_option_dict(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     PyObject *dict;
 
@@ -265,14 +265,14 @@ IMPL_APPENDER(add_var_to_list,
               PyGccVariable_New)
 
 static PyObject *
-PyGcc_get_variables(PyObject *self, PyObject *args)
+PyGcc_get_variables(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     IMPL_GLOBAL_LIST_MAKER(gcc_for_each_variable,
                            add_var_to_list)
 }
 
 static PyObject *
-PyGcc_maybe_get_identifier(PyObject *self, PyObject *args)
+PyGcc_maybe_get_identifier(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     const char *str;
     tree t;
@@ -298,7 +298,7 @@ IMPL_APPENDER(add_translation_unit_decl_to_list,
               PyGcc_make_translation_unit_decl)
 
 static PyObject *
-PyGcc_get_translation_units(PyObject *self, PyObject *args)
+PyGcc_get_translation_units(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     IMPL_GLOBAL_LIST_MAKER(gcc_for_each_translation_unit_decl,
                            add_translation_unit_decl_to_list)
@@ -322,7 +322,7 @@ __typeof__ (global_namespace) global_namespace __attribute__ ((weak));
 
 
 static PyObject *
-PyGcc_get_global_namespace(PyObject *self, PyObject *args)
+PyGcc_get_global_namespace(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     /* (global_namespace will be NULL outside the C++ frontend, giving a
        result of None) */
@@ -332,7 +332,7 @@ PyGcc_get_global_namespace(PyObject *self, PyObject *args)
 /* Dump files */
 
 static PyObject *
-PyGcc_dump(PyObject *self, PyObject *arg)
+PyGcc_dump(PyObject *self ATTRIBUTE_UNUSED, PyObject *arg ATTRIBUTE_UNUSED)
 {
     PyObject *str_obj;
     /*
@@ -366,7 +366,7 @@ PyGcc_dump(PyObject *self, PyObject *arg)
 }
 
 static PyObject *
-PyGcc_get_dump_file_name(PyObject *self, PyObject *noargs)
+PyGcc_get_dump_file_name(PyObject *self ATTRIBUTE_UNUSED, PyObject *noargs ATTRIBUTE_UNUSED)
 {
     /* gcc/tree-pass.h declares:
         extern const char *dump_file_name;
@@ -375,7 +375,7 @@ PyGcc_get_dump_file_name(PyObject *self, PyObject *noargs)
 }
 
 static PyObject *
-PyGcc_get_dump_base_name(PyObject *self, PyObject *noargs)
+PyGcc_get_dump_base_name(PyObject *self ATTRIBUTE_UNUSED, PyObject *noargs ATTRIBUTE_UNUSED)
 {
     /*
       The generated gcc/options.h has:
@@ -390,7 +390,7 @@ PyGcc_get_dump_base_name(PyObject *self, PyObject *noargs)
 }
 
 static PyObject *
-PyGcc_get_is_lto(PyObject *self, PyObject *noargs)
+PyGcc_get_is_lto(PyObject *self ATTRIBUTE_UNUSED, PyObject *noargs ATTRIBUTE_UNUSED)
 {
     /*
       The generated gcc/options.h has:
@@ -515,12 +515,29 @@ static struct
     PyObject *argument_tuple;
 } PyGcc_globals;
 
+/*
+struct PyModuleDef {
+  PyModuleDef_Base m_base; 1
+  const char* m_name; NULL
+  const char* m_doc; NULL
+  Py_ssize_t m_size; 
+  PyMethodDef *m_methods;
+  PyModuleDef_Slot *m_slots;
+  traverseproc m_traverse;
+  inquiry m_clear;
+  freefunc m_free;
+};
+*/
 static struct PyModuleDef module_def = {
     PyModuleDef_HEAD_INIT,
     "gcc",   /* name of module */
     NULL,
-    -1,
-    GccMethods
+    -1, /* -1 means that the module does not support sub-interpreters, because it has global state.*/
+    GccMethods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 PyMODINIT_FUNC PyInit_gcc(void)
@@ -739,7 +756,7 @@ setup_sys(struct plugin_name_args *plugin_info)
   Wired up to PLUGIN_FINISH, this callback handles finalization for the plugin:
 */
 void
-on_plugin_finish(void *gcc_data, void *user_data)
+on_plugin_finish(void *gcc_data ATTRIBUTE_UNUSED, void *user_data ATTRIBUTE_UNUSED)
 {
     /*
        Clean up the python runtime.

@@ -185,6 +185,8 @@ PyTypeObject PyGccWrapperMeta_TypeObj  = {
 #if PY_VERSION_HEX >= 0x02060000
     0, /*tp_version_tag*/
 #endif
+    NULL, /* tp_finalize */
+    NULL, /* tp_vectorcall */
 };
 
 /* Maintain a circular linked list of PyGccWrapper instances: */
@@ -318,7 +320,7 @@ my_walker(void *arg ATTRIBUTE_UNUSED)
 
 static struct ggc_root_tab myroottab[] = {
     { (char*)"", 1, 1, my_walker, NULL },
-    { NULL, }
+    { NULL, 0, 0, NULL, NULL}
 };
 
 void
@@ -341,7 +343,7 @@ force_gcc_gc(void)
 }
 
 PyObject *
-PyGcc__force_garbage_collection(PyObject *self, PyObject *args)
+PyGcc__force_garbage_collection(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     force_gcc_gc();
     Py_RETURN_NONE;
@@ -354,7 +356,7 @@ PyGcc__force_garbage_collection(PyObject *self, PyObject *args)
     }
 
 PyObject *
-PyGcc__gc_selftest(PyObject *self, PyObject *args)
+PyGcc__gc_selftest(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     tree tree_intcst;
     PyObject *wrapper_intcst;

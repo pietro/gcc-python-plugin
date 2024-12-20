@@ -87,7 +87,7 @@ make_args_for_attribute_callback(tree node, tree args)
 
 static tree
 handle_python_attribute(tree *node, tree name, tree args,
-                        int flags, bool *no_add_attrs)
+                        int flags, bool *no_add_attrs ATTRIBUTE_UNUSED)
 {
     PyObject *callable;
 
@@ -154,7 +154,7 @@ handle_python_attribute(tree *node, tree name, tree args,
 }
 
 PyObject*
-PyGcc_RegisterAttribute(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGcc_RegisterAttribute(PyObject *self ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     const char *name;
     int min_length;

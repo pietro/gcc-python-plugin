@@ -152,7 +152,7 @@ int PyGcc_option_is_enabled(enum opt_code opt_code)
 }
 
 PyObject *
-PyGccOption_is_enabled(PyGccOption * self, void *closure)
+PyGccOption_is_enabled(PyGccOption * self, void *closure ATTRIBUTE_UNUSED)
 {
     int i = PyGcc_option_is_enabled(self->opt.inner);
 
@@ -198,7 +198,7 @@ error:
 }
 
 void
-PyGcc_WrtpMarkForPyGccOption(PyGccOption *wrapper)
+PyGcc_WrtpMarkForPyGccOption(PyGccOption *wrapper ATTRIBUTE_UNUSED)
 {
     /* empty */
 }

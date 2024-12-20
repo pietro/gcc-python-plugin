@@ -169,7 +169,7 @@ IMPL_APPENDER(add_cgraph_node_to_list,
               PyGccCallgraphNode_New)
 
 PyObject *
-PyGcc_get_callgraph_nodes(PyObject *self, PyObject *args)
+PyGcc_get_callgraph_nodes(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     /* For debugging, see GCC's dump of things: */
     if (0) {

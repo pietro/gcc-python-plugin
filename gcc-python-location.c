@@ -233,7 +233,7 @@ error:
 }
 
 void
-PyGcc_WrtpMarkForPyGccLocation(PyGccLocation *wrapper)
+PyGcc_WrtpMarkForPyGccLocation(PyGccLocation *wrapper ATTRIBUTE_UNUSED)
 {
     /* empty */
 }
@@ -283,7 +283,7 @@ PyGccRichLocation_init(PyGccRichLocation *self, PyObject *args,
 }
 
 void
-PyGcc_WrtpMarkForPyGccRichLocation(PyGccRichLocation *wrapper)
+PyGcc_WrtpMarkForPyGccRichLocation(PyGccRichLocation *wrapper ATTRIBUTE_UNUSED)
 {
     /* empty */
 }

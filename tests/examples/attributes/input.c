@@ -20,11 +20,11 @@
 /* Test of adding custom attributes */
 
 /* Function declarations with custom attributes: */
-extern some_function(void) __attribute__((claims_mutex("io")));
+extern int some_function(void) __attribute__((claims_mutex("io")));
 
-extern some_other_function(void) __attribute__((releases_mutex("io")));
+extern int some_other_function(void) __attribute__((releases_mutex("io")));
 
-extern yet_another_function(void) __attribute__((claims_mutex("db"),
+extern int yet_another_function(void) __attribute__((claims_mutex("db"),
                                                  claims_mutex("io"),
                                                  releases_mutex("io")));
 /*

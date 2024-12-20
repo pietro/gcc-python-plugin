@@ -263,7 +263,7 @@ static unsigned int execute_cb(void)
 static int
 do_pass_init(PyObject *s, PyObject *args, PyObject *kwargs,
              enum opt_pass_type pass_type,
-             size_t sizeof_pass)
+             size_t sizeof_pass ATTRIBUTE_UNUSED)
 {
     struct PyGccPass *self = (struct PyGccPass *)s;
     const char *name;
@@ -409,7 +409,7 @@ is_dump_enabled(struct opt_pass *pass)
 }
 
 PyObject *
-PyGccPass_get_dump_enabled(struct PyGccPass *self, void *closure)
+PyGccPass_get_dump_enabled(struct PyGccPass *self, void *closure ATTRIBUTE_UNUSED)
 {
     return PyBool_FromLong(is_dump_enabled(self->pass));
 }
@@ -422,7 +422,7 @@ PyGccPass_get_dump_enabled(struct PyGccPass *self, void *closure)
 #endif
 
 int
-PyGccPass_set_dump_enabled(struct PyGccPass *self, PyObject *value, void *closure)
+PyGccPass_set_dump_enabled(struct PyGccPass *self, PyObject *value, void *closure ATTRIBUTE_UNUSED)
 {
     struct dump_file_info *dfi = get_dump_file_info (self->pass->static_pass_number);
     assert(dfi);
@@ -479,7 +479,7 @@ PyGccPass_set_dump_enabled(struct PyGccPass *self, PyObject *value, void *closur
 
 
 PyObject *
-PyGccPass_get_roots(PyObject *cls, PyObject *noargs)
+PyGccPass_get_roots(PyObject *cls ATTRIBUTE_UNUSED, PyObject *noargs ATTRIBUTE_UNUSED)
 {
     /*
       There are 5 "roots" for the pass tree; see gcc/passes.c
@@ -545,7 +545,7 @@ find_pass_by_name(const char *name, struct opt_pass *pass_list)
 
 
 PyObject *
-PyGccPass_get_by_name(PyObject *cls, PyObject *args, PyObject *kwargs)
+PyGccPass_get_by_name(PyObject *cls ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     const char *name;
     const char *keywords[] = {"name",
@@ -680,7 +680,7 @@ error:
 }
 
 void
-PyGcc_WrtpMarkForPyGccPass(PyGccPass *wrapper)
+PyGcc_WrtpMarkForPyGccPass(PyGccPass *wrapper ATTRIBUTE_UNUSED)
 {
     /*
       This function is empty: struct opt_pass does not have a GTY()

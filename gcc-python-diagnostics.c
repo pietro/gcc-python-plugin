@@ -41,7 +41,7 @@
 */
 
 PyObject*
-PyGcc_permerror(PyObject *self, PyObject *args)
+PyGcc_permerror(PyObject *self ATTRIBUTE_UNUSED, PyObject *args)
 {
     PyGccLocation *loc_obj = NULL;
     const char *msg = NULL;
@@ -66,7 +66,7 @@ PyGcc_permerror(PyObject *self, PyObject *args)
 }
 
 PyObject *
-PyGcc_error(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGcc_error(PyObject *self ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     PyGccLocation *loc_obj;
     const char *msg;
@@ -87,7 +87,7 @@ PyGcc_error(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 PyObject *
-PyGcc_warning(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGcc_warning(PyObject *self ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     PyGccLocation *loc_obj;
     const char *msg;
@@ -142,7 +142,7 @@ PyGcc_warning(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 PyObject *
-PyGcc_inform(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGcc_inform(PyObject *self ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     const char *msg;
     const char *keywords[] = {"location",

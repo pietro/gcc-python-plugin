@@ -102,7 +102,7 @@ PyGccBasicBlock_repr(struct PyGccBasicBlock * self)
 }
 
 PyObject *
-PyGccBasicBlock_get_preds(PyGccBasicBlock *self, void *closure)
+PyGccBasicBlock_get_preds(PyGccBasicBlock *self, void *closure ATTRIBUTE_UNUSED)
 {
     IMPL_LIST_MAKER(gcc_cfg_block_for_each_pred_edge,
                     self->bb,
@@ -110,7 +110,7 @@ PyGccBasicBlock_get_preds(PyGccBasicBlock *self, void *closure)
 }
 
 PyObject *
-PyGccBasicBlock_get_succs(PyGccBasicBlock *self, void *closure)
+PyGccBasicBlock_get_succs(PyGccBasicBlock *self, void *closure ATTRIBUTE_UNUSED)
 {
     IMPL_LIST_MAKER(gcc_cfg_block_for_each_succ_edge,
                     self->bb,
@@ -122,7 +122,7 @@ IMPL_APPENDER(append_gimple_to_list,
               PyGccGimple_New)
 
 PyObject *
-PyGccBasicBlock_get_gimple(PyGccBasicBlock *self, void *closure)
+PyGccBasicBlock_get_gimple(PyGccBasicBlock *self, void *closure ATTRIBUTE_UNUSED)
 {
     assert(self);
     assert(self->bb.inner);
@@ -143,7 +143,7 @@ IMPL_APPENDER(append_gimple_phi_to_list,
               PyGccGimple_New_phi)
 
 PyObject *
-PyGccBasicBlock_get_phi_nodes(PyGccBasicBlock *self, void *closure)
+PyGccBasicBlock_get_phi_nodes(PyGccBasicBlock *self, void *closure ATTRIBUTE_UNUSED)
 {
     assert(self);
     assert(self->bb.inner);
@@ -158,7 +158,7 @@ IMPL_APPENDER(append_rtl_to_list,
               PyGccRtl_New)
 
 PyObject *
-PyGccBasicBlock_get_rtl(PyGccBasicBlock *self, void *closure)
+PyGccBasicBlock_get_rtl(PyGccBasicBlock *self, void *closure ATTRIBUTE_UNUSED)
 {
     assert(self);
     assert(self->bb.inner);
@@ -403,7 +403,7 @@ add_block_to_list(gcc_cfg_block bb, void *user_data)
 }
 
 PyObject *
-PyGccCfg_get_basic_blocks(PyGccCfg *self, void *closure)
+PyGccCfg_get_basic_blocks(PyGccCfg *self, void *closure ATTRIBUTE_UNUSED)
 {
     IMPL_LIST_MAKER(gcc_cfg_for_each_block,
                     self->cfg,

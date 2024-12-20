@@ -199,7 +199,7 @@ PyGcc_CallbackFor_tree(void *gcc_data, void *user_data)
 
 
 static void
-PyGcc_CallbackFor_PLUGIN_ATTRIBUTES(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_PLUGIN_ATTRIBUTES(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -229,7 +229,7 @@ PyGcc_CallbackFor_PLUGIN_PASS_EXECUTION(void *gcc_data, void *user_data)
 }
 
 static void
-PyGcc_CallbackFor_FINISH(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_FINISH(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -246,7 +246,7 @@ PyGcc_CallbackFor_FINISH(void *gcc_data, void *user_data)
 }
 
 static void
-PyGcc_CallbackFor_FINISH_UNIT(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_FINISH_UNIT(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -258,7 +258,7 @@ PyGcc_CallbackFor_FINISH_UNIT(void *gcc_data, void *user_data)
 }
 
 static void
-PyGcc_CallbackFor_GGC_START(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_GGC_START(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -270,7 +270,7 @@ PyGcc_CallbackFor_GGC_START(void *gcc_data, void *user_data)
 }
 
 static void
-PyGcc_CallbackFor_GGC_MARKING(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_GGC_MARKING(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -282,7 +282,7 @@ PyGcc_CallbackFor_GGC_MARKING(void *gcc_data, void *user_data)
 }
 
 static void
-PyGcc_CallbackFor_GGC_END(void *gcc_data, void *user_data)
+PyGcc_CallbackFor_GGC_END(void *gcc_data ATTRIBUTE_UNUSED, void *user_data)
 {
     PyGILState_STATE gstate;
 
@@ -295,7 +295,7 @@ PyGcc_CallbackFor_GGC_END(void *gcc_data, void *user_data)
 
 
 PyObject*
-PyGcc_RegisterCallback(PyObject *self, PyObject *args, PyObject *kwargs)
+PyGcc_RegisterCallback(PyObject *self ATTRIBUTE_UNUSED, PyObject *args, PyObject *kwargs)
 {
     int event;
     PyObject *callback = NULL;

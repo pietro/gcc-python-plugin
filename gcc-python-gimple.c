@@ -274,7 +274,7 @@ PyGccGimple_walk_tree(struct PyGccGimple * self, PyObject *args, PyObject *kwarg
 }
 
 PyObject *
-PyGccGimple_get_rhs(struct PyGccGimple *self, void *closure)
+PyGccGimple_get_rhs(struct PyGccGimple *self, void *closure ATTRIBUTE_UNUSED)
 {
     PyObject * result = NULL;
     unsigned int i;
@@ -304,7 +304,7 @@ PyGccGimple_get_rhs(struct PyGccGimple *self, void *closure)
 }
 
 PyObject *
-PyGccGimple_get_str_no_uid(struct PyGccGimple *self, void *closure)
+PyGccGimple_get_str_no_uid(struct PyGccGimple *self, void *closure ATTRIBUTE_UNUSED)
 {
     return do_pretty_print(self, 0, TDF_NOUID);
 }
@@ -314,7 +314,7 @@ IMPL_APPENDER(add_tree_to_list,
               PyGccTree_New)
 
 PyObject *
-PyGccGimpleCall_get_args(struct PyGccGimple *self, void *closure)
+PyGccGimpleCall_get_args(struct PyGccGimple *self, void *closure ATTRIBUTE_UNUSED)
 {
     IMPL_LIST_MAKER(gcc_gimple_call_for_each_arg,
                     PyGccGimple_as_gcc_gimple_call(self),
@@ -344,7 +344,7 @@ PyGccGimpleLabel_repr(PyObject *self)
 
 
 PyObject *
-PyGccGimplePhi_get_args(struct PyGccGimple *self, void *closure)
+PyGccGimplePhi_get_args(struct PyGccGimple *self, void *closure ATTRIBUTE_UNUSED)
 {
     /* See e.g. gimple-pretty-print.c:dump_gimple_phi */
     PyObject * result = NULL;
@@ -382,7 +382,7 @@ IMPL_APPENDER(add_case_label_expr_to_list,
               PyGccCaseLabelExpr_New)
 
 PyObject *
-PyGccGimpleSwitch_get_labels(struct PyGccGimple *self, void *closure)
+PyGccGimpleSwitch_get_labels(struct PyGccGimple *self, void *closure ATTRIBUTE_UNUSED)
 {
     IMPL_LIST_MAKER(gcc_gimple_switch_for_each_label,
                     PyGccGimple_as_gcc_gimple_switch(self),

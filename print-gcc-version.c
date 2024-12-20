@@ -23,7 +23,7 @@
 #include "plugin.h"
 #include <stdio.h>
 
-int main(int argc, const char *argv[])
+int main(int argc  ATTRIBUTE_UNUSED, const char *argv[]  ATTRIBUTE_UNUSED)
 {
   printf("%i\n", GCC_VERSION);
   return 0;

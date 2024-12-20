@@ -32,21 +32,24 @@ def on_pass_execution(p, fn):
         print('argument types: %r' % [str(t) for t in fn.decl.type.argument_types])
 
         assert isinstance(fn.cfg, gcc.Cfg) # None for some early passes
-        assert len(fn.cfg.basic_blocks) == 3
+
+        assert len(fn.cfg.basic_blocks) == 4
         assert fn.cfg.basic_blocks[0] == fn.cfg.entry
         assert fn.cfg.basic_blocks[1] == fn.cfg.exit
-        bb = fn.cfg.basic_blocks[2]
-        for i,stmt in enumerate(bb.gimple):
-            print('gimple[%i]:' % i)
-            print('  str(stmt): %r' % str(stmt))
-            print('  repr(stmt): %r' % repr(stmt))
-            if isinstance(stmt, gcc.GimpleCall):
-                from gccutils import pprint
-                print('  type(stmt.fn): %r' % type(stmt.fn))
-                print('  str(stmt.fn): %r' % str(stmt.fn))
-                for i, arg in enumerate(stmt.args):
-                    print('  str(stmt.args[%i]): %r' % (i, str(stmt.args[i])))
-                print('  str(stmt.lhs): %s' % str(stmt.lhs))
+        # bb = fn.cfg.basic_blocks[2]
+        for j,bb in enumerate(fn.cfg.basic_blocks[2:4]):
+            print('basic_block[%i]:' % (j+2))
+            for i,stmt in enumerate(bb.gimple):
+                print('  gimple[%i]:' % i)
+                print('    str(stmt): %r' % str(stmt))
+                print('    repr(stmt): %r' % repr(stmt))
+                if isinstance(stmt, gcc.GimpleCall):
+                    from gccutils import pprint
+                    print('  type(stmt.fn): %r' % type(stmt.fn))
+                    print('  str(stmt.fn): %r' % str(stmt.fn))
+                    for i, arg in enumerate(stmt.args):
+                        print('  str(stmt.args[%i]): %r' % (i, str(stmt.args[i])))
+                    print('  str(stmt.lhs): %s' % str(stmt.lhs))
 
 # Wire up our callback:
 gcc.register_callback(gcc.PLUGIN_PASS_EXECUTION,

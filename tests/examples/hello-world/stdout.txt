@@ -2,13 +2,21 @@ fn: gcc.Function('main')
 fn.decl.name: 'main'
 return type: 'int'
 argument types: ['int', 'char * *']
-gimple[0]:
-  str(stmt): '__builtin_puts (&"Hello, python"[0]);'
-  repr(stmt): 'gcc.GimpleCall()'
-  type(stmt.fn): <type 'gcc.AddrExpr'>
+basic_block[2]:
+  gimple[0]:
+    str(stmt): '__builtin_puts (&"Hello, python"[0]);'
+    repr(stmt): 'gcc.GimpleCall()'
+  type(stmt.fn): <class 'gcc.AddrExpr'>
   str(stmt.fn): '__builtin_puts'
   str(stmt.args[0]): '&"Hello, python"[0]'
   str(stmt.lhs): None
-gimple[1]:
-  str(stmt): 'return;'
-  repr(stmt): 'gcc.GimpleReturn()'
+  gimple[1]:
+    str(stmt): 'D.nnnnn = 0;'
+    repr(stmt): 'gcc.GimpleAssign()'
+basic_block[3]:
+  gimple[0]:
+    str(stmt): '<L0>:'
+    repr(stmt): 'gcc.GimpleLabel(label=gcc.LabelDecl(nnnn))'
+  gimple[1]:
+    str(stmt): 'return D.nnnnn;'
+    repr(stmt): 'gcc.GimpleReturn()'

@@ -122,7 +122,7 @@ get_operand_as_object(const_rtx in_rtx, int idx, char fmt)
 }
 
 PyObject *
-PyGccRtl_get_operands(struct PyGccRtl *self, void *closure)
+PyGccRtl_get_operands(struct PyGccRtl *self, void *closure ATTRIBUTE_UNUSED)
 {
     const int length = GET_RTX_LENGTH (GET_CODE (self->insn.inner));
     PyObject *result;

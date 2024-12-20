@@ -33,7 +33,7 @@ static struct PyStructSequence_Field gcc_version_fields[] = {
     {(char*)"devphase", NULL},
     {(char*)"revision", NULL},
     {(char*)"configuration_arguments", NULL},
-    {0}
+    {NULL, NULL}
 };
 
 static struct PyStructSequence_Desc gcc_version_desc = {
@@ -76,7 +76,7 @@ gcc_version_to_object(struct plugin_gcc_version *version)
 }
 
 PyObject *
-PyGcc_get_plugin_gcc_version(PyObject *self, PyObject *args)
+PyGcc_get_plugin_gcc_version(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     /*
        "gcc_version" is compiled in to the plugin, as part of
@@ -86,7 +86,7 @@ PyGcc_get_plugin_gcc_version(PyObject *self, PyObject *args)
 }
 
 PyObject *
-PyGcc_get_gcc_version(PyObject *self, PyObject *args)
+PyGcc_get_gcc_version(PyObject *self ATTRIBUTE_UNUSED, PyObject *args ATTRIBUTE_UNUSED)
 {
     /*
        "actual_gcc_version" is passed in when the plugin is initialized
