@@ -15,35 +15,29 @@
 #   along with this program.  If not, see
 #   <http://www.gnu.org/licenses/>.
 
-from subprocess import Popen, PIPE
+from collections import namedtuple
+from subprocess import Popen
 import re
 
 # For the purpose of the GCC plugin, it's OK to assume that we're compiling
 # with GCC itself, and thus we can use GCC extensions
 with_gcc_extensions = True
 
+
 def camel_case(txt):
-    return ''.join([word.title()
-                    for word in txt.split('_')])
+    return "".join([word.title() for word in txt.split("_")])
+
 
 def nullable_ptr(ptr):
     if ptr:
         return ptr
     else:
-        return 'NULL'
-
-def simple_unaryfunc(identifier, typename, c_expression):
-    """Define a simple unaryfunc, using a specifc PyObject subclass"""
-    self.add_defn("static PyObject *\n" +
-                  "%s(%s *self)\n" % (identifier, typename) +
-                  "{\n" +
-                  "    return %s;\n" % c_expression +
-                  "}\n\n")
-    return identifier
+        return "NULL"
 
 
 class NamedEntity:
     """A thing within C code that has an identifier"""
+
     def __init__(self, identifier):
         self.identifier = identifier
 
@@ -53,37 +47,38 @@ class NamedEntity:
         else:
             val = None
         if cast:
-            caststr = '(%s)' % cast
+            caststr = "(%s)" % cast
         else:
-            caststr = ''
+            caststr = ""
         if with_gcc_extensions:
             # Designate the initializer fields:
-            return '    .%s = %s%s,\n' % (name, caststr, nullable_ptr(val))
+            return "    .%s = %s%s,\n" % (name, caststr, nullable_ptr(val))
         else:
-            return '    %s%s, /* %s */\n' % (caststr, nullable_ptr(val), name)
+            return "    %s%s, /* %s */\n" % (caststr, nullable_ptr(val), name)
 
     def unaryfunc_field(self, name):
-        return self.c_ptr_field(name, 'unaryfunc')
+        return self.c_ptr_field(name, "unaryfunc")
 
     def c_src_field(self, name):
         assert hasattr(self, name)
         val = getattr(self, name)
         if with_gcc_extensions:
             # Designate the initializer fields:
-            return '    .%s = %s,\n' % (name, val)
+            return "    .%s = %s,\n" % (name, val)
         else:
-            return '    %s, /* %s */\n' % (val, name)
+            return "    %s, /* %s */\n" % (val, name)
 
     def c_src_field_value(self, name, val, cast=None):
         if cast:
-            caststr = '(%s)' % cast
+            caststr = "(%s)" % cast
         else:
-            caststr = ''
+            caststr = ""
         if with_gcc_extensions:
             # Designate the initializer fields:
-            return '    .%s = %s%s,\n' % (name, caststr, val)
+            return "    .%s = %s%s,\n" % (name, caststr, val)
         else:
-            return '    %s%s, /* %s */\n' % (caststr, val, name)
+            return "    %s%s, /* %s */\n" % (caststr, val, name)
+
 
 class PyGetSetDef:
     def __init__(self, name, get, set, doc, closure=None):
@@ -94,12 +89,13 @@ class PyGetSetDef:
         self.closure = closure
 
     def c_defn(self):
-        result =  '    {(char*)"%s",\n' % self.name
-        result += '     (getter)%s,\n' % nullable_ptr(self.get)
-        result += '     (setter)%s,\n' % nullable_ptr(self.set)
+        result = '    {(char*)"%s",\n' % self.name
+        result += "     (getter)%s,\n" % nullable_ptr(self.get)
+        result += "     (setter)%s,\n" % nullable_ptr(self.set)
         result += '     (char*)"%s",\n' % nullable_ptr(self.doc)
-        result += '     %s},\n' % nullable_ptr(self.closure)
+        result += "     %s},\n" % nullable_ptr(self.closure)
         return result
+
 
 class PyGetSetDefTable(NamedEntity):
     def __init__(self, identifier, gsdefs, identifier_prefix=None, typename=None):
@@ -109,11 +105,12 @@ class PyGetSetDefTable(NamedEntity):
         self.typename = typename
 
     def c_defn(self):
-        result = 'static PyGetSetDef %s[] = {\n' % self.identifier
+        result = "static PyGetSetDef %s[] = {\n" % self.identifier
         for gsdef in self.gsdefs:
             result += gsdef.c_defn()
-        result += '    {NULL}  /* Sentinel */\n'
-        result += '};\n'
+        result += "    {%s" % ", ".join(["NULL"] * 5)
+        result += "}  /* Sentinel */\n"
+        result += "};\n"
         return result
 
     def add_gsdef(self, name, getter, setter, doc, closure=None):
@@ -122,23 +119,28 @@ class PyGetSetDefTable(NamedEntity):
     def add_simple_getter(self, cu, name, c_expression, doc):
         assert self.identifier_prefix
         assert self.typename
-        identifier = self.identifier_prefix + '_get_' + name
+        identifier = self.identifier_prefix + "_get_" + name
         cu.add_simple_getter(identifier, self.typename, c_expression)
         self.add_gsdef(name, identifier, None, doc)
 
-METH_VARARGS = 'METH_VARARGS'
+
+METH_VARARGS = "METH_VARARGS"
+
 
 class PyMethodDef:
     def __init__(self, name, fn_name, args, docstring):
         self.name = name
         self.fn_name = fn_name
-        #assert args in ('METH_VARARGS', ) # FIXME
+        # assert args in ('METH_VARARGS', ) # FIXME
         self.args = args
         self.docstring = docstring
 
     def c_defn(self):
-        return ('    {(char*)"%(name)s",  %(fn_name)s, %(args)s,\n'
-                '     (char*)"%(docstring)s"},\n' % self.__dict__)
+        return (
+            '    {(char*)"%(name)s",  %(fn_name)s, %(args)s,\n'
+            '     (char*)"%(docstring)s"},\n' % self.__dict__
+        )
+
 
 class PyMethodTable(NamedEntity):
     def __init__(self, identifier, methods):
@@ -146,15 +148,16 @@ class PyMethodTable(NamedEntity):
         self.methods = methods
 
     def c_defn(self):
-        result = 'static PyMethodDef %s[] = {\n' % self.identifier
+        result = "static PyMethodDef %s[] = {\n" % self.identifier
         for method in self.methods:
             result += method.c_defn()
-        result += '    {NULL, NULL, 0, NULL} /* Sentinel */\n'
-        result += '};\n'
+        result += "    {NULL, NULL, 0, NULL} /* Sentinel */\n"
+        result += "};\n"
         return result
 
     def add_method(self, name, fn_name, args, docstring):
         self.methods.append(PyMethodDef(name, fn_name, args, docstring))
+
 
 # See http://docs.python.org/c-api/typeobj.html#number-structs
 class PyNumberMethods(NamedEntity):
@@ -162,46 +165,144 @@ class PyNumberMethods(NamedEntity):
         NamedEntity.__init__(self, identifier)
 
     def c_defn(self):
-        result = 'static PyNumberMethods %s = {\n' % self.identifier
-        result += self.c_ptr_field('nb_add')
-        result += self.c_ptr_field('nb_subtract')
-        result += self.c_ptr_field('nb_multiply')
-        result += self.c_ptr_field('nb_remainder')
-        result += self.c_ptr_field('nb_divmod')
-        result += self.c_ptr_field('nb_power')
-        result += self.unaryfunc_field('nb_negative')
-        result += self.unaryfunc_field('nb_positive')
-        result += self.unaryfunc_field('nb_absolute')
-        result += self.c_ptr_field('nb_bool')
-        result += self.unaryfunc_field('nb_invert')
-        result += self.c_ptr_field('nb_lshift')
-        result += self.c_ptr_field('nb_rshift')
-        result += self.c_ptr_field('nb_and')
-        result += self.c_ptr_field('nb_xor')
-        result += self.c_ptr_field('nb_or')
-        result += self.unaryfunc_field('nb_int')
-        result += self.c_ptr_field('nb_reserved')
-        result += self.unaryfunc_field('nb_float')
-        result += self.c_ptr_field('nb_inplace_add')
-        result += self.c_ptr_field('nb_inplace_subtract')
-        result += self.c_ptr_field('nb_inplace_multiply')
-        result += self.c_ptr_field('nb_inplace_remainder')
-        result += self.c_ptr_field('nb_inplace_power')
-        result += self.c_ptr_field('nb_inplace_lshift')
-        result += self.c_ptr_field('nb_inplace_rshift')
-        result += self.c_ptr_field('nb_inplace_and')
-        result += self.c_ptr_field('nb_inplace_xor')
-        result += self.c_ptr_field('nb_inplace_or')
-        result += self.c_ptr_field('nb_floor_divide')
-        result += self.c_ptr_field('nb_true_divide')
-        result += self.c_ptr_field('nb_inplace_floor_divide')
-        result += self.c_ptr_field('nb_inplace_true_divide')
-        result += self.unaryfunc_field('nb_index')
-        result += '};\n'
+        result = "\n"
+        result = "static PyNumberMethods %s = {\n" % self.identifier
+        result += self.c_initializer()
+        result += "};\n"
+        result += "\n"
+        return result
+
+    def c_initializer(self):
+        result = self.c_ptr_field("nb_add")
+        result += self.c_ptr_field("nb_subtract")
+        result += self.c_ptr_field("nb_multiply")
+        result += self.c_ptr_field("nb_remainder")
+        result += self.c_ptr_field("nb_divmod")
+        result += self.c_ptr_field("nb_power")
+        result += self.unaryfunc_field("nb_negative")
+        result += self.unaryfunc_field("nb_positive")
+        result += self.unaryfunc_field("nb_absolute")
+        result += self.c_ptr_field("nb_bool")
+        result += self.unaryfunc_field("nb_invert")
+        result += self.c_ptr_field("nb_lshift")
+        result += self.c_ptr_field("nb_rshift")
+        result += self.c_ptr_field("nb_and")
+        result += self.c_ptr_field("nb_xor")
+        result += self.c_ptr_field("nb_or")
+        result += self.unaryfunc_field("nb_int")
+        result += self.c_ptr_field("nb_reserved")
+        result += self.unaryfunc_field("nb_float")
+        result += self.c_ptr_field("nb_inplace_add")
+        result += self.c_ptr_field("nb_inplace_subtract")
+        result += self.c_ptr_field("nb_inplace_multiply")
+        result += self.c_ptr_field("nb_inplace_remainder")
+        result += self.c_ptr_field("nb_inplace_power")
+        result += self.c_ptr_field("nb_inplace_lshift")
+        result += self.c_ptr_field("nb_inplace_rshift")
+        result += self.c_ptr_field("nb_inplace_and")
+        result += self.c_ptr_field("nb_inplace_xor")
+        result += self.c_ptr_field("nb_inplace_or")
+        result += self.c_ptr_field("nb_floor_divide")
+        result += self.c_ptr_field("nb_true_divide")
+        result += self.c_ptr_field("nb_inplace_floor_divide")
+        result += self.c_ptr_field("nb_inplace_true_divide")
+        result += self.unaryfunc_field("nb_index")
+        result += self.c_ptr_field("nb_matrix_multiply")
+        result += self.c_ptr_field("nb_inplace_matrix_multiply")
         return result
 
     def add_method(self, name, fn_name, args, docstring):
         self.methods.append(PyMethodDef(name, fn_name, args, docstring))
+
+
+class PyAsyncMethod(NamedEntity):
+    def __init__(self, identifier, am_await, am_aiter, am_anext, am_send, **kwargs):
+        NamedEntity.__init__(self, identifier)
+        self.identifier = identifier
+        self.am_await = am_await
+        self.am_aiter = am_aiter
+        self.am_anext = am_anext
+        self.am_send = am_send
+        self.__dict__.update(kwargs)
+
+    def c_defn(self):
+        result = "\n"
+        result += "PyAsyncMethod %(identifier)s = {\n" % self.__dict__
+        result += self.c_initializer()
+        result += "};\n" % self.__dict__
+        result += "\n"
+        return result
+
+    def c_initializer(self):
+        result = self.c_ptr_field("am_await")
+        result += self.c_ptr_field("am_aiter")
+        result += self.c_ptr_field("am_anext")
+        result += self.c_ptr_field("am_send")
+        return result
+
+
+class PyMappingMethods(NamedEntity):
+    def __init__(self, identifier):
+        NamedEntity.__init__(self, identifier)
+
+    def c_defn(self):
+        result = "\n"
+        result += "PyMappingMethods %s = {\n" % self.identifier
+        result += self.c_initializer()
+        result += "};\n"
+        result += "\n"
+        return result
+
+    def c_initializer(self):
+        result = self.c_ptr_field("mp_length", "lenfunc")
+        result += self.c_ptr_field("mp_subscript", "binaryfunc")
+        result += self.c_ptr_field("mp_ass_subscript", "objobjargproc")
+        return result
+
+
+class PySequenceMethods(NamedEntity):
+    def __init__(self, identifier):
+        NamedEntity.__init__(self, identifier)
+
+    def c_defn(self):
+        result = "\n"
+        result += "PySequenceMethods %s = {\n" % self.identifier
+        result += self.c_initializer()
+        result += "};\n"
+        result += "\n"
+        return result
+
+    def c_initializer(self):
+        result = self.c_ptr_field("sq_length", "lenfunc")
+        result += self.c_ptr_field("sq_concat", "binaryfunc")
+        result += self.c_ptr_field("sq_repeat", "ssizeargfunc")
+        result += self.c_ptr_field("sq_item", "ssizeargfunc")
+        result += self.c_ptr_field("was_sq_slice", "void *")
+        result += self.c_ptr_field("sq_ass_item", "ssizeobjargproc")
+        result += self.c_ptr_field("was_sq_ass_slice", "void *")
+        result += self.c_ptr_field("sq_contains", "objobjproc")
+        result += self.c_ptr_field("sq_inplace_concat", "binaryfunc")
+        result += self.c_ptr_field("sq_inplace_repeat", "ssizeargfunc")
+        return result
+
+
+class PyBufferProcs(NamedEntity):
+    def __init__(self, identifier):
+        NamedEntity.__init__(self, identifier)
+
+    def c_defn(self):
+        result = "\n"
+        result += "PyBufferProcs %s = {\n" % self.identifier
+        result += self.c_initializer()
+        result += "};\n"
+        result += "\n"
+        return result
+
+    def c_initializer(self):
+        result = self.c_ptr_field("bf_getbuffer", "getbufferproc")
+        result += self.c_ptr_field("bf_releasebuffer", "releasebufferproc")
+        return result
+
 
 class PyTypeObject(NamedEntity):
     def __init__(self, identifier, localname, tp_name, struct_name, **kwargs):
@@ -210,89 +311,96 @@ class PyTypeObject(NamedEntity):
         self.tp_name = tp_name
         self.struct_name = struct_name
         self.__dict__.update(kwargs)
-        if not hasattr(self, 'tp_new'):
-            self.tp_new = 'PyType_GenericNew'
-        if not hasattr(self, 'tp_flags'):
-            self.tp_flags = 'Py_TPFLAGS_DEFAULT'
+        if not hasattr(self, "tp_new"):
+            self.tp_new = "PyType_GenericNew"
+        if not hasattr(self, "tp_flags"):
+            self.tp_flags = "Py_TPFLAGS_DEFAULT"
 
     def c_defn(self):
-        result = '\n'
-        result += 'PyTypeObject %(identifier)s = {\n' % self.__dict__
+        result = "\n"
+        result += "PyTypeObject %(identifier)s = {\n" % self.__dict__
         result += self.c_initializer()
-        result += '};\n' % self.__dict__
-        result +='\n'
+        result += "};\n" % self.__dict__
+        result += "\n"
         return result
 
     def c_initializer(self):
-        if hasattr(self, 'ob_type'):
-            ob_type_str = getattr(self, 'ob_type')
+        if hasattr(self, "ob_type"):
+            ob_type_str = getattr(self, "ob_type")
         else:
-            ob_type_str = 'NULL'
-        result = '    PyVarObject_HEAD_INIT(%s, 0)\n' % ob_type_str
+            ob_type_str = "NULL"
+        result = "    PyVarObject_HEAD_INIT(%s, 0)\n" % ob_type_str
         result += '    "%(tp_name)s", /*tp_name*/\n' % self.__dict__
-        result += '    sizeof(%(struct_name)s), /*tp_basicsize*/\n' % self.__dict__
-        result += '    0, /*tp_itemsize*/\n'
-        result += self.c_ptr_field('tp_dealloc')
-        result += '#if PY_VERSION_HEX >= 0x03080000\n'
-        result += '    0, /*tp_vectorcall_offset*/\n'
-        result += '#else\n'
-        result += self.c_ptr_field('tp_print')
-        result += '#endif\n'
-        result += self.c_ptr_field('tp_getattr')
-        result += self.c_ptr_field('tp_setattr')
-        result += '    0, /*reserved*/\n' % self.__dict__
-        result += self.c_ptr_field('tp_repr')
-        result += self.c_ptr_field('tp_as_number')
-        result += self.c_ptr_field('tp_as_sequence')
-        result += self.c_ptr_field('tp_as_mapping')
-        result += self.c_ptr_field('tp_hash')
-        result += self.c_ptr_field('tp_call')
-        result += self.c_ptr_field('tp_str')
-        result += self.c_ptr_field('tp_getattro')
-        result += self.c_ptr_field('tp_setattro')
-        result += self.c_ptr_field('tp_as_buffer')
-        result += self.c_src_field('tp_flags')
-        result += '    0, /*tp_doc*/\n'
-        result += self.c_ptr_field('tp_traverse')
-        result += self.c_ptr_field('tp_clear')
-        result += self.c_ptr_field('tp_richcompare')
-        result += '    0, /* tp_weaklistoffset */\n'
-        result += self.c_ptr_field('tp_iter')
-        result += self.c_ptr_field('tp_iternext')
-        result += self.c_ptr_field('tp_methods')
-        result += self.c_ptr_field('tp_members')
-        result += self.c_ptr_field('tp_getset')
-        result += self.c_ptr_field('tp_base', 'PyTypeObject*')
-        result += self.c_ptr_field('tp_dict')
-        result += self.c_ptr_field('tp_descr_get')
-        result += self.c_ptr_field('tp_descr_set')
-        result += '    0, /* tp_dictoffset */\n'
-        result += self.c_ptr_field('tp_init', 'initproc')
-        result += self.c_ptr_field('tp_alloc')
-        result += self.c_ptr_field('tp_new')
-        result += self.c_ptr_field('tp_free')
-        result += self.c_ptr_field('tp_is_gc')
-        result += self.c_ptr_field('tp_bases')
-        result += self.c_ptr_field('tp_mro')
-        result += self.c_ptr_field('tp_cache')
-        result += self.c_ptr_field('tp_subclasses')
-        result += self.c_ptr_field('tp_weaklist')
-        result += self.c_ptr_field('tp_del')
-        result += '#if PY_VERSION_HEX >= 0x02060000\n' % self.__dict__
-        result += '    0, /*tp_version_tag*/\n' % self.__dict__
-        result += '#endif\n' % self.__dict__
-        result += '\n'
+        result += "    sizeof(%(struct_name)s), /*tp_basicsize*/\n" % self.__dict__
+        result += "    0, /*tp_itemsize*/\n"
+        result += self.c_ptr_field("tp_dealloc")
+        result += "#if PY_VERSION_HEX >= 0x03080000\n"
+        result += "    0, /*tp_vectorcall_offset*/\n"
+        result += "#else\n"
+        result += self.c_ptr_field("tp_print")
+        result += "#endif\n"
+        result += self.c_ptr_field("tp_getattr")
+        result += self.c_ptr_field("tp_setattr")
+        result += "    0, /*reserved*/\n" % self.__dict__
+        result += self.c_ptr_field("tp_repr")
+        result += self.c_ptr_field("tp_as_number")
+        result += self.c_ptr_field("tp_as_sequence")
+        result += self.c_ptr_field("tp_as_mapping")
+        result += self.c_ptr_field("tp_hash")
+        result += self.c_ptr_field("tp_call")
+        result += self.c_ptr_field("tp_str")
+        result += self.c_ptr_field("tp_getattro")
+        result += self.c_ptr_field("tp_setattro")
+        result += self.c_ptr_field("tp_as_buffer")
+        result += self.c_src_field("tp_flags")
+        result += "    0, /*tp_doc*/\n"
+        result += self.c_ptr_field("tp_traverse")
+        result += self.c_ptr_field("tp_clear")
+        result += self.c_ptr_field("tp_richcompare")
+        result += "    0, /* tp_weaklistoffset */\n"
+        result += self.c_ptr_field("tp_iter")
+        result += self.c_ptr_field("tp_iternext")
+        result += self.c_ptr_field("tp_methods")
+        result += self.c_ptr_field("tp_members")
+        result += self.c_ptr_field("tp_getset")
+        result += self.c_ptr_field("tp_base", "PyTypeObject*")
+        result += self.c_ptr_field("tp_dict")
+        result += self.c_ptr_field("tp_descr_get")
+        result += self.c_ptr_field("tp_descr_set")
+        result += "    0, /* tp_dictoffset */\n"
+        result += self.c_ptr_field("tp_init", "initproc")
+        result += self.c_ptr_field("tp_alloc")
+        result += self.c_ptr_field("tp_new")
+        result += self.c_ptr_field("tp_free")
+        result += self.c_ptr_field("tp_is_gc")
+        result += self.c_ptr_field("tp_bases")
+        result += self.c_ptr_field("tp_mro")
+        result += self.c_ptr_field("tp_cache")
+        result += self.c_ptr_field("tp_subclasses")
+        result += self.c_ptr_field("tp_weaklist")
+        result += self.c_ptr_field("tp_del")
+        result += "#if PY_VERSION_HEX >= 0x02060000\n" % self.__dict__
+        result += "    0, /*tp_version_tag*/\n" % self.__dict__
+        result += "#endif\n" % self.__dict__
+        result += "    NULL, /* tp_finalize */\n"
+        result += "    NULL, /* tp_vectorcall */"
+        result += "\n"
         return result
 
     def c_invoke_type_ready(self):
-        return ('    if (PyType_Ready((PyTypeObject*)&%(identifier)s) < 0)\n'
-                '        goto error;\n'
-                '\n') % self.__dict__
+        return (
+            "    if (PyType_Ready((PyTypeObject*)&%(identifier)s) < 0)\n"
+            "        goto error;\n"
+            "\n"
+        ) % self.__dict__
 
     def c_invoke_add_to_module(self):
-        return ('    Py_INCREF(&%(identifier)s);\n'
-                '    PyModule_AddObject(m, "%(localname)s", (PyObject *)&%(identifier)s);\n'
-                '\n') % self.__dict__
+        return (
+            "    Py_INCREF(&%(identifier)s);\n"
+            '    PyModule_AddObject(m, "%(localname)s", (PyObject *)&%(identifier)s);\n'
+            "\n"
+        ) % self.__dict__
+
 
 class PyModule:
     def __init__(self, modname, modmethods, moddoc):
@@ -304,35 +412,39 @@ class PyModule:
         if self.modmethods:
             self.modmethods_as_ptr = self.modmethods.identifier
         else:
-            self.modmethods_as_ptr = 'NULL'
+            self.modmethods_as_ptr = "NULL"
 
     def c_initfn_decl(self):
-        return ("""
+        return (
+            """
 PyMODINIT_FUNC PyInit_%(modname)s(void);
-""" % self.__dict__)
-
+"""
+            % self.__dict__
+        )
 
     def c_initfn_def_begin(self):
-        return ("""
+        return (
+            """
 PyMODINIT_FUNC PyInit_%(modname)s(void)
 {
     PyObject *m = NULL;
-""" % self.__dict__)
-
+"""
+            % self.__dict__
+        )
 
     def c_initfn_def_end(self):
-        return ("""
+        return """
     return m;
 
 error:
     Py_XDECREF(m);
     return NULL;
 }
-""")
-
+"""
 
     def c_py3k_moduledef(self):
-        return ("""
+        return (
+            """
 static PyModuleDef %(modname)smodule = {
     PyModuleDef_HEAD_INIT,
     "%(modname)s", /* m_name */
@@ -341,28 +453,34 @@ static PyModuleDef %(modname)smodule = {
     %(modmethods_as_ptr)s, /* m_methods */
     NULL, NULL, NULL, NULL
 };
-""" % self.__dict__)
-
+"""
+            % self.__dict__
+        )
 
     def c_invoke_ctor(self):
-        return ("""
+        return (
+            """
     m = PyModule_Create(&%(modname)smodule);
     if (!m) {
         goto error;
     }
 
-""" % self.__dict__)
+"""
+            % self.__dict__
+        )
+
 
 class CompilationUnit:
     """
     A single C file
     """
+
     def __init__(self):
-        self._includes = '#include <Python.h>\n'
+        self._includes = "#include <Python.h>\n"
 
-        self._prototypes = ''
+        self._prototypes = ""
 
-        self._definitions = ''
+        self._definitions = ""
 
     def add_include(self, path):
         self._includes += '#include "%s"\n' % path
@@ -374,38 +492,44 @@ class CompilationUnit:
         self._definitions += text
 
     def as_str(self):
-        return ('/* Autogenerated by cpybuilder */\n' +
-                self._includes +
-                self.make_header('Prototypes') +
-                self._prototypes +
-                self.make_header('Definitions') +
-                self._definitions)
+        return (
+            "/* Autogenerated by cpybuilder */\n"
+            + self._includes
+            + self.make_header("Prototypes")
+            + self._prototypes
+            + self.make_header("Definitions")
+            + self._definitions
+        )
 
     def make_header(self, text):
-        return '\n/**** %s ****/\n\n' % text
+        return "\n/**** %s ****/\n\n" % text
 
     def add_simple_getter(self, identifier, typename, c_expression):
         """Define a simple getter, suitable for use by a PyGetSetDef"""
-        self.add_defn("static PyObject *\n" +
-                      "%s(%s *self, void *closure)\n" % (identifier, typename) +
-                      "{\n" +
-                      "    return %s;\n" % c_expression +
-                      "}\n\n")
+        self.add_defn(
+            "static PyObject *\n"
+            + "%s(%s *self, void *closure ATTRIBUTE_UNUSED)\n" % (identifier, typename)
+            + "{\n"
+            + "    return %s;\n" % c_expression
+            + "}\n\n"
+        )
         return identifier
 
-    def add_simple_setter(self, identifier, typename, attrname, c_typecheck_fn, c_assignment):
+    def add_simple_setter(
+        self, identifier, typename, attrname, c_typecheck_fn, c_assignment
+    ):
         """Define a simple setter, suitable for use by a PyGetSetDef"""
-        self.add_defn("static int\n" +
-                      "%s(%s *self, PyObject *value, void *closure)\n" % (identifier, typename) +
-                      "{\n" +
-                      "    if (! %s(value)) {\n" % c_typecheck_fn +
-                      "        PyErr_SetString(PyExc_TypeError,\n" +
-                      '                        "%s must be an int");\n' % attrname +
-                      '        return -1;\n'
-                      '    }\n' +
-                      '    %s;\n' % c_assignment +
-                      "    return 0;\n"
-                      "}\n\n")
+        self.add_defn(
+            "static int\n"
+            + "%s(%s *self, PyObject *value, void *closure)\n" % (identifier, typename)
+            + "{\n"
+            + "    if (! %s(value)) {\n" % c_typecheck_fn
+            + "        PyErr_SetString(PyExc_TypeError,\n"
+            + '                        "%s must be an int");\n' % attrname
+            + "        return -1;\n"
+            "    }\n" + "    %s;\n" % c_assignment + "    return 0;\n"
+            "}\n\n"
+        )
         return identifier
 
     def add_simple_int_setter(self, identifier, typename, attrname, c_assignment):
@@ -413,22 +537,23 @@ class CompilationUnit:
         Define a simple setter for an int-valued attribute, suitable for use
         by a PyGetSetDef
         """
-        return self.add_simple_setter(identifier, typename, attrname,
-                                      'PyGccInt_Check',
-                                      c_assignment)
+        return self.add_simple_setter(
+            identifier, typename, attrname, "PyGccInt_Check", c_assignment
+        )
+
 
 class SimpleModule:
     """
     A C extension module built from a single C file
     """
+
     def __init__(self):
         self.cu = CompilationUnit()
 
-        self._modinit_preinit = ''
-        self._modinit_postinit = ''
+        self._modinit_preinit = ""
+        self._modinit_postinit = ""
 
-    def add_type_object(self, name, localname,
-                        tp_name, struct_name, **kwargs):
+    def add_type_object(self, name, localname, tp_name, struct_name, **kwargs):
         pytype = PyTypeObject(name, localname, tp_name, struct_name, **kwargs)
         self.cu.add_defn(pytype.c_defn())
         self._modinit_preinit += pytype.c_invoke_type_ready()
@@ -447,12 +572,14 @@ class SimpleModule:
         self.cu.add_defn(self._modinit_postinit)
         self.cu.add_defn(pymod.c_initfn_def_end())
 
+
 class SimpleBuild:
-    def __init__(self, sm, builddir='.'):
+    def __init__(self, sm, builddir="."):
         self.sm
 
-    #def generate_c(self):
+    # def generate_c(self):
     #    with open(sm.name
+
 
 class CommandError(RuntimeError):
     def __init__(self, out, err, p):
@@ -465,21 +592,22 @@ class CommandError(RuntimeError):
         self.p = p
 
     def __str__(self):
-        result = '\n'
-        result += 'returncode: %r\n' % self.p.returncode
-        result += '  %s\n' % self._describe_activity()
-        result += 'Stdout:\n'
+        result = "\n"
+        result += "returncode: %r\n" % self.p.returncode
+        result += "  %s\n" % self._describe_activity()
+        result += "Stdout:\n"
         result += self._indent(self.out)
-        result += '\nStderr:\n'
+        result += "\nStderr:\n"
         result += self._indent(self.err, 4)
         result += self._extra_info()
         return result
 
     def _indent(self, txt, size=2):
-        return '\n'.join([' '*size + line for line in txt.splitlines()])
+        return "\n".join([" " * size + line for line in txt.splitlines()])
 
     def _extra_info(self):
-        return ''
+        return ""
+
 
 class PyRuntimeError(CommandError):
     def __init__(self, runtime, cmd, out, err, p):
@@ -488,17 +616,24 @@ class PyRuntimeError(CommandError):
         self.cmd = cmd
 
     def _describe_activity(self):
-        return 'running: %s -c %r' % (self.runtime.executable , self.cmd)
+        return "running: %s -c %r" % (self.runtime.executable, self.cmd)
 
-from collections import namedtuple
-class PyVersionInfo(namedtuple('PyVersionInfo', 'major minor micro releaselevel serial')):
+
+class PyVersionInfo(
+    namedtuple("PyVersionInfo", "major minor micro releaselevel serial")
+):
     @classmethod
     def from_text(cls, txt):
         # e.g.:
         #   sys.version_info(major=2, minor=7, micro=1, releaselevel='final', serial=0)
-        m = re.match('sys\.version_info\(major=([0-9]+), minor=([0-9]+), micro=([0-9]+), releaselevel=\'(.*)\', serial=([0-9]+)\)', txt)
-        return PyVersionInfo(major=int(m.group(1)),
-                             minor=int(m.group(2)),
-                             micro=int(m.group(3)),
-                             releaselevel=m.group(4),
-                             serial=int(m.group(5)))
+        m = re.match(
+            "sys\.version_info\(major=([0-9]+), minor=([0-9]+), micro=([0-9]+), releaselevel='(.*)', serial=([0-9]+)\)",
+            txt,
+        )
+        return PyVersionInfo(
+            major=int(m.group(1)),
+            minor=int(m.group(2)),
+            micro=int(m.group(3)),
+            releaselevel=m.group(4),
+            serial=int(m.group(5)),
+        )

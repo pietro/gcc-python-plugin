@@ -15,8 +15,8 @@
 #   along with this program.  If not, see
 #   <http://www.gnu.org/licenses/>.
 
+import cairo
 import gcc
-import math
 
 HEADING_HEIGHT = 20
 TREE_X_INDENT = 24
@@ -25,39 +25,43 @@ PASS_LEADING = 4
 PHASE_SPACING = 50
 
 propdata = [
-    ('PROP_gimple_any', (1, 0, 0)),
-    ('PROP_gimple_lcf', (0, 1, 0)),
-    ('PROP_gimple_leh', (0, 0, 1)),
-    ('PROP_cfg', (0, 1, 1)),
-    ('PROP_referenced_vars', (1, 1, 0)),
-    ('PROP_ssa', (0.5, 0.5, 1)),
-    ('PROP_no_crit_edges', (0, 0, 0)),
-    ('PROP_rtl', (0.5, 0.5, 0.5)),
-    ('PROP_gimple_lomp', (0.75, 1, 0)),
-    ('PROP_cfglayout', (0, 1, 0.75)),
-    ('PROP_gimple_lcx', (0.25, 0.25, 0.25)),
+    ("PROP_gimple_any", (1, 0, 0)),
+    ("PROP_gimple_lcf", (0, 1, 0)),
+    ("PROP_gimple_leh", (0, 0, 1)),
+    ("PROP_cfg", (0, 1, 1)),
+    ("PROP_referenced_vars", (1, 1, 0)),
+    ("PROP_ssa", (0.5, 0.5, 1)),
+    ("PROP_no_crit_edges", (0, 0, 0)),
+    ("PROP_rtl", (0.5, 0.5, 0.5)),
+    ("PROP_gimple_lomp", (0.75, 1, 0)),
+    ("PROP_cfglayout", (0, 1, 0.75)),
+    ("PROP_gimple_lcx", (0.25, 0.25, 0.25)),
 ]
 
 # PROP_referenced_vars went away in GCC 4.8 (in r190067)
-if not hasattr(gcc, 'PROP_referenced_vars'):
-    propdata = [(flag, color) for (flag, color) in propdata
-                if flag != 'PROP_referenced_vars']
+if not hasattr(gcc, "PROP_referenced_vars"):
+    propdata = [
+        (flag, color) for (flag, color) in propdata if flag != "PROP_referenced_vars"
+    ]
+
 
 def show_text_x_centered(ctx, text, x, y):
     ctx.set_source_rgb(0, 0, 0)
     te = ctx.text_extents(text)
-    ctx.move_to(x - te[2]/2, y)
+    ctx.move_to(x - te[2] / 2, y)
     ctx.show_text(text)
+
 
 def show_text_y_centered(ctx, text, x, y):
     ctx.set_source_rgb(0, 0, 0)
     te = ctx.text_extents(text)
-    ctx.move_to(x, y + te[3]/2)
+    ctx.move_to(x, y + te[3] / 2)
     ctx.show_text(text)
+
 
 class Property:
     def __init__(self, flagname, color, x):
-        assert flagname.startswith('PROP_')
+        assert flagname.startswith("PROP_")
         self.name = flagname[5:]
         self.color = color
         self.flag = getattr(gcc, flagname)
@@ -100,8 +104,12 @@ class Property:
             ctx.line_to(self.x + 5, end_y)
             ctx.stroke()
 
-properties = [Property(propname, col, 250 + (i*20))
-              for i, (propname, col) in enumerate(propdata)]
+
+properties = [
+    Property(propname, col, 250 + (i * 20))
+    for i, (propname, col) in enumerate(propdata)
+]
+
 
 class PassInfo:
     def __init__(self, d, ps, parent):
@@ -126,10 +134,9 @@ class PassInfo:
                 ctx.stroke()
 
 
-
 class Phase:
     def __init__(self, rootname, base_y):
-        self.passinfo = {} # gcc.Pass ->PassInfo
+        self.passinfo = {}  # gcc.Pass ->PassInfo
         self.rootname = rootname
         self.base_y = base_y
         self.height = base_y + HEADING_HEIGHT + PASS_LEADING
@@ -165,27 +172,34 @@ class Phase:
             pi = self.passinfo[k]
             pi.render(ctx)
 
+
 phases = {}
 base_y = HEADING_HEIGHT
 for i, (rootname, reflabel, ps) in enumerate(
-    zip(('The lowering passes',
-         'The "small IPA" passes',
-         'The "regular IPA" passes',
-         'Passes generating Link-Time Optimization data',
-         'The "all other passes" catch-all'),
-        ('all_lowering_passes',
-         'all_small_ipa_passes',
-         'all_regular_ipa_passes',
-         'all_lto_gen_passes',
-         'all_passes'),
-        gcc.Pass.get_roots())):
+    zip(
+        (
+            "The lowering passes",
+            'The "small IPA" passes',
+            'The "regular IPA" passes',
+            "Passes generating Link-Time Optimization data",
+            'The "all other passes" catch-all',
+        ),
+        (
+            "all_lowering_passes",
+            "all_small_ipa_passes",
+            "all_regular_ipa_passes",
+            "all_lto_gen_passes",
+            "all_passes",
+        ),
+        gcc.Pass.get_roots(),
+    )
+):
     # print rootname, reflabel, ps
     phases[i] = Phase(rootname, base_y)
     phases[i].add_pass(ps, None)
     base_y = phases[i].height + PHASE_SPACING
 
-import cairo
-surf = cairo.SVGSurface('docs/passes.svg', 550, base_y)
+surf = cairo.SVGSurface("docs/passes.svg", 550, base_y)
 ctx = cairo.Context(surf)
 
 # Fill with white:

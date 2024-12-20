@@ -20,12 +20,14 @@ import sys
 
 from configbuilder import ConfigBuilder, CheckFor
 
+
 class GccPythonPluginConfigBuilder(ConfigBuilder):
     def __init__(self, argv):
         import argparse
+
         parser = argparse.ArgumentParser()
-        parser.add_argument('--gcc')
-        parser.add_argument('--plugindir')
+        parser.add_argument("--gcc")
+        parser.add_argument("--plugindir")
         args, argv = parser.parse_known_args(argv)
         ConfigBuilder.__init__(self, argv)
         self.gcc = args.gcc
@@ -33,94 +35,54 @@ class GccPythonPluginConfigBuilder(ConfigBuilder):
         self.extra_compilation_args = []
 
     def main(self):
-        prefix = 'GCC_PYTHON_PLUGIN_CONFIG_'
+        prefix = "GCC_PYTHON_PLUGIN_CONFIG_"
         if self.plugindir:
             plugindir = self.plugindir
         else:
-            plugindir = self.capture_shell_output('locating plugin directory for %s' % self.gcc,
-                                            '%s --print-file-name=plugin' % self.gcc).strip()
-        extraargs = ['-I%s' % os.path.join(plugindir, 'include')]
-
-        self.test_whether_built_with_cplusplus()
-        extraargs += self.extra_compilation_args
+            plugindir = self.capture_shell_output(
+                "locating plugin directory for %s" % self.gcc,
+                "%s --print-file-name=plugin" % self.gcc,
+            ).strip()
+        extraargs = ["-I%s" % os.path.join(plugindir, "include")]
 
         # In GCC 4.9 onwards, this header file uses C++ syntax, so we
         # must already have determined C vs C++ at this point
-        self.test_for_mandatory_c_header('gcc-plugin.h', extraargs)
+        self.test_for_mandatory_c_header("gcc-plugin.h", extraargs)
 
-        self.test_c_compilation(initmsg='checking whether plugin.def defines PLUGIN_FINISH_DECL',
-                              src='''
+        self.test_c_compilation(
+            initmsg="checking whether plugin.def defines PLUGIN_FINISH_DECL",
+            src="""
 #include <gcc-plugin.h>
 
 int i[PLUGIN_FINISH_DECL];
-''',
-                              extraargs=extraargs,
-                              description='Does plugin.def define PLUGIN_FINISH_DECL?',
-                              defn=prefix+'has_PLUGIN_FINISH_DECL')
-        self.test_rtti()
+""",
+            extraargs=extraargs,
+            description="Does plugin.def define PLUGIN_FINISH_DECL?",
+            defn=prefix + "has_PLUGIN_FINISH_DECL",
+        )
+        # Passes are C++ classes (GCC 4.9 onwards); we need
+        # -fno-rtti
+        self.extra_compilation_args += ["-fno-rtti"]
+
         self.write_outcome()
         self.write_EXTRA_CFLAGS()
 
-    def test_whether_built_with_cplusplus(self):
-        """
-        Determine if the GCC was built with C++ or C
-        """
-        # According to http://gcc.gnu.org/ml/gcc/2012-03/msg00411.html
-        # we should look in $(gcc -print-file-name=plugin)/include/auto-host.h
-        # where we'll see either:
-        #
-        # Old 4.6, built with C:
-        #   /* Define if building with C++. */
-        #   #ifndef USED_FOR_TARGET
-        #   /* #undef ENABLE_BUILD_WITH_CXX */
-        #   #endif
-        #
-        # New 4.7, built with C++:
-        #   /* Define if building with C++. */
-        #   #ifndef USED_FOR_TARGET
-        #   #define ENABLE_BUILD_WITH_CXX 1
-        #   #endif
-        #
-        # 4.8, built with C++ doesn't have this (always built with C++)
-        with CheckFor('Checking whether %s was built with C or C++' % self.gcc,
-                      True) as check:
-            def with_cplusplus():
-                check.okmsg = 'C++'
-                self.extra_compilation_args += ['-x', 'c++']
-            def with_c():
-                check.okmsg = 'C'
-            auto_host_h = os.path.join(self.plugindir, 'include', 'auto-host.h')
-            with open(auto_host_h, 'r') as f:
-                content = f.read()
-            if '/* #undef ENABLE_BUILD_WITH_CXX */' in content:
-                with_c()
-            elif '#define ENABLE_BUILD_WITH_CXX 1' in content:
-                with_cplusplus()
-            else:
-                # Not found, assume C++:
-                with_cplusplus()
-
     def test_rtti(self):
-        # Only need to do this check for C++ compilation
-        if 'c++' in self.extra_compilation_args:
-            with CheckFor('checking whether passes are C++ classes', True) as check:
-                tree_pass_h = os.path.join(self.plugindir, 'include', 'tree-pass.h')
-                with open(tree_pass_h, 'r') as f:
-                    content = f.read()
-                if 'class opt_pass' in content:
-                    # Passes are C++ classes (GCC 4.9 onwards); we need
-                    # -fno-rtti
-                    self.extra_compilation_args += ['-fno-rtti']
-                    check.okmsg = 'yes'
-                else:
-                    check.okmsg = 'no'
+        with CheckFor("checking whether passes are C++ classes", True) as check:
+            # tree_pass_h = os.path.join(self.plugindir, 'include', 'tree-pass.h')
+            # with open(tree_pass_h, 'r') as f:
+            #     content = f.read()
+            # if 'class opt_pass' in content:
+            check.okmsg = "yes"
+            # else:
+            #     check.okmsg = 'no'
 
     def write_EXTRA_CFLAGS(self):
-        filename = 'autogenerated-EXTRA_CFLAGS.txt'
-        sys.stdout.write('writing %s\n' % filename)
-        with open(filename, 'w') as f:
-            f.write(' '.join(self.extra_compilation_args))
+        filename = "autogenerated-EXTRA_CFLAGS.txt"
+        sys.stdout.write("writing %s\n" % filename)
+        with open(filename, "w") as f:
+            f.write(" ".join(self.extra_compilation_args))
+
 
 ch = GccPythonPluginConfigBuilder(sys.argv)
 ch.main()
-

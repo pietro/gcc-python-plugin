@@ -25,22 +25,31 @@ import sysconfig
 import tempfile
 import unittest
 
-from cpybuilder import *
+from cpybuilder import (
+    PyVersionInfo,
+    CommandError,
+    SimpleModule,
+    PyMethodTable,
+    PyMethodDef,
+    METH_VARARGS,
+)
+
 
 def get_module_filename(name):
     # Python 3.2 onwards embeds the SOABI variable in module filenames
     # (see PEP 3149):
-    SOABI = sysconfig.get_config_var('SOABI')
+    SOABI = sysconfig.get_config_var("SOABI")
     if SOABI:
-        return '%s.%s.so' % (name, SOABI)
+        return "%s.%s.so" % (name, SOABI)
 
     if hasattr(sys, "getobjects"):
         # debug build of Python:
         # FIXME: this is a Fedora-ism:
-        return '%s_d.so' % name
+        return "%s_d.so" % name
     else:
         # regular (optimized) build of Python:
-        return '%s.so' % name
+        return "%s.so" % name
+
 
 class CompilationError(CommandError):
     def __init__(self, bm):
@@ -48,48 +57,51 @@ class CompilationError(CommandError):
         self.bm = bm
 
     def _describe_activity(self):
-        return 'compiling: %s' % ' '.join(self.bm.args)
+        return "compiling: %s" % " ".join(self.bm.args)
+
 
 class BuiltModule:
     """A test build of a SimpleModule using sys.executable, done in a tempdir"""
+
     def __init__(self, sm):
         self.sm = sm
 
-    def write_src(self, modname, extra_cflags = None):
+    def write_src(self, modname, extra_cflags=None):
         self.tmpdir = tempfile.mkdtemp()
 
-        self.srcfile = os.path.join(self.tmpdir, '%s.c' % modname)
+        self.srcfile = os.path.join(self.tmpdir, "%s.c" % modname)
         self.modfile = os.path.join(self.tmpdir, get_module_filename(modname))
 
-        f = open(self.srcfile, 'w')
+        f = open(self.srcfile, "w")
         f.write(self.sm.cu.as_str())
         f.close()
 
-
-    def compile_src(self, extra_cflags = None):
-        self.args = [os.environ.get('CC', 'gcc')]
-        self.args += ['-o', self.modfile]
-        self.args +=  ['-I' + sc.get_python_inc(),
-                       '-I' + sc.get_python_inc(plat_specific=True)]
+    def compile_src(self, extra_cflags=None):
+        self.args = [os.environ.get("CC", "gcc")]
+        self.args += ["-o", self.modfile]
+        self.args += [
+            "-I" + sc.get_python_inc(),
+            "-I" + sc.get_python_inc(plat_specific=True),
+        ]
 
         # Get CFLAGS from sysconfig
-        cflags = sc.get_config_var('CFLAGS').split()
+        cflags = sc.get_config_var("CFLAGS").split()
         # Filter out LTO
-        cflags = filter(lambda flag: flag != '-flto', cflags)
+        cflags = filter(lambda flag: flag != "-flto", cflags)
         self.args += cflags
 
-        self.args += ['-Wall',  '-Werror'] # during testing
+        self.args += ["-Wall", "-Werror"]  # during testing
         # on some builds of Python, CFLAGS does not contain -fPIC, but it
         # appears to still be necessary:
-        self.args += ['-fPIC']
-        self.args += ['-shared'] # not sure why this is necessary
+        self.args += ["-fPIC"]
+        self.args += ["-shared"]  # not sure why this is necessary
         if extra_cflags:
             self.args += extra_cflags
         self.args += [self.srcfile]
         # print(self.args)
 
         env = dict(os.environ)
-        env['LC_ALL'] = 'C'
+        env["LC_ALL"] = "C"
 
         # Invoke the compiler:
         self.p = Popen(self.args, env=env, stdout=PIPE, stderr=PIPE)
@@ -103,15 +115,15 @@ class BuiltModule:
         assert os.path.exists(self.modfile)
         # print(self.modfile)
 
-    def build(self, modname, extra_cflags = None):
+    def build(self, modname, extra_cflags=None):
         self.write_src(modname)
         self.compile_src(extra_cflags)
 
     def cleanup(self):
         shutil.rmtree(self.tmpdir)
 
-class SimpleTest(unittest.TestCase):
 
+class SimpleTest(unittest.TestCase):
     # We'll be manipulating sys.path during the test
     # Save a copy, and restore it after each test:
     def setUp(self):
@@ -123,7 +135,7 @@ class SimpleTest(unittest.TestCase):
 
     def test_simple_compilation(self):
         # Verify building and running a trivial module (against multiple Python runtimes)
-        MODNAME = 'simple_compilation'
+        MODNAME = "simple_compilation"
         sm = SimpleModule()
 
         sm.cu.add_decl("""
@@ -139,12 +151,13 @@ example_hello(PyObject *self, PyObject *args)
 }
 """)
 
-        methods = PyMethodTable('example_methods',
-                                [PyMethodDef('hello', 'example_hello',
-                                             METH_VARARGS, 'Return a greeting.')])
+        methods = PyMethodTable(
+            "example_methods",
+            [PyMethodDef("hello", "example_hello", METH_VARARGS, "Return a greeting.")],
+        )
         sm.cu.add_defn(methods.c_defn())
 
-        sm.add_module_init(MODNAME, modmethods=methods, moddoc='This is a doc string')
+        sm.add_module_init(MODNAME, modmethods=methods, moddoc="This is a doc string")
         # print(sm.cu.as_str())
 
         # Build the module:
@@ -154,14 +167,15 @@ example_hello(PyObject *self, PyObject *args)
         # Verify that it built:
         sys.path.append(bm.tmpdir)
         import simple_compilation
-        self.assertEqual(simple_compilation.hello(), 'Hello world!')
+
+        self.assertEqual(simple_compilation.hello(), "Hello world!")
 
         # Cleanup successful test runs:
         bm.cleanup()
 
     def test_module_with_type(self):
         # Verify an extension with a type
-        MODNAME = 'module_with_type'
+        MODNAME = "module_with_type"
         sm = SimpleModule()
 
         sm.cu.add_decl("""
@@ -171,18 +185,22 @@ struct PyExampleType {
 };
 """)
 
-        sm.cu.add_defn("PyObject *\n"
-                       "example_Example_repr(PyObject * self)\n"
-                       "{\n"
-                       "    return PyUnicode_FromString(\"example.ExampleType('')\");\n"
-                       "}\n")
-        sm.add_type_object(name = 'example_ExampleType',
-                           localname = 'ExampleType',
-                           tp_name = 'example.ExampleType',
-                           struct_name = 'struct PyExampleType',
-                           tp_repr = 'example_Example_repr')
+        sm.cu.add_defn(
+            "PyObject *\n"
+            "example_Example_repr(PyObject * self)\n"
+            "{\n"
+            "    return PyUnicode_FromString(\"example.ExampleType('')\");\n"
+            "}\n"
+        )
+        sm.add_type_object(
+            name="example_ExampleType",
+            localname="ExampleType",
+            tp_name="example.ExampleType",
+            struct_name="struct PyExampleType",
+            tp_repr="example_Example_repr",
+        )
 
-        sm.add_module_init(MODNAME, modmethods=None, moddoc='This is a doc string')
+        sm.add_module_init(MODNAME, modmethods=None, moddoc="This is a doc string")
         # print sm.cu.as_str()
 
         # Build the module:
@@ -192,22 +210,25 @@ struct PyExampleType {
         # Verify that it built:
         sys.path.append(bm.tmpdir)
         import module_with_type
-        self.assertEqual(repr(module_with_type.ExampleType()),
-                         "example.ExampleType('')")
+
+        self.assertEqual(
+            repr(module_with_type.ExampleType()), "example.ExampleType('')"
+        )
 
         # Cleanup successful test runs:
         bm.cleanup()
 
     def test_version_parsing(self):
-        vi  = PyVersionInfo.from_text("sys.version_info(major=2, minor=7, micro=1, releaselevel='final', serial=0)")
-        self.assertEqual(vi,
-                         PyVersionInfo(major=2, minor=7, micro=1, releaselevel='final', serial=0))
+        vi = PyVersionInfo.from_text(
+            "sys.version_info(major=2, minor=7, micro=1, releaselevel='final', serial=0)"
+        )
+        self.assertEqual(
+            vi, PyVersionInfo(major=2, minor=7, micro=1, releaselevel="final", serial=0)
+        )
 
         # "sys.version_info(major=2, minor=7, micro=1, releaselevel='final', serial=0)"
         # "sys.version_info(major=3, minor=2, micro=0, releaselevel='candidate', serial=1)"
 
 
-
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

@@ -15,12 +15,16 @@
 #   along with this program.  If not, see
 #   <http://www.gnu.org/licenses/>.
 
-from cpybuilder import *
+from cpybuilder import CompilationUnit, PyGetSetDefTable
 from wrapperbuilder import PyGccWrapperTypeObject
-import os, subprocess, sys
+import os
+import subprocess
+import sys
 
 if not os.path.exists("./print-gcc-version"):
-    sys.stderr.write("Build make target 'print-gcc-version' before running this script.")
+    sys.stderr.write(
+        "Build make target 'print-gcc-version' before running this script."
+    )
     sys.exit(1)
 
 gcc_version = int(subprocess.check_output("./print-gcc-version"))
@@ -30,21 +34,22 @@ if gcc_version >= 10000:
     sys.exit(0)
 
 cu = CompilationUnit()
-cu.add_include('gcc-python.h')
-cu.add_include('gcc-python-wrappers.h')
-cu.add_include('gcc-plugin.h')
+cu.add_include("gcc-python.h")
+cu.add_include("gcc-python-wrappers.h")
+cu.add_include("gcc-plugin.h")
 cu.add_include("params.h")
 
-cu._prototypes += '''
+cu._prototypes += """
 #define PARAM_INFO(self) (compiler_params[(self)->param_num])
-'''
+"""
 
-modinit_preinit = ''
-modinit_postinit = ''
+modinit_preinit = ""
+modinit_postinit = ""
 
 # GCC's params.h defines
 #   typedef struct param_info param_info
 # and they're listed in params.def
+
 
 def generate_param():
     #
@@ -53,75 +58,101 @@ def generate_param():
     global modinit_preinit
     global modinit_postinit
 
-    getsettable = PyGetSetDefTable('PyGccParameter_getset_table', [],
-                                   identifier_prefix='PyGccParameter',
-                                   typename='PyGccParameter')
+    getsettable = PyGetSetDefTable(
+        "PyGccParameter_getset_table",
+        [],
+        identifier_prefix="PyGccParameter",
+        typename="PyGccParameter",
+    )
+
     def add_simple_getter(name, c_expression, doc):
         getsettable.add_simple_getter(cu, name, c_expression, doc)
-    add_simple_getter('option',
-                      'PyGccStringOrNone(PARAM_INFO(self).option)',
-                      "(string) The name used with the `--param <name>=<value>' switch to set this value")
-    add_simple_getter('default_value',
-                      'PyGccInt_FromLong(PARAM_INFO(self).default_value)',
-                      "(int/long)")
-    add_simple_getter('min_value',
-                      'PyGccInt_FromLong(PARAM_INFO(self).min_value)',
-                      "(int/long) The minimum acceptable value")
-    add_simple_getter('max_value',
-                      'PyGccInt_FromLong(PARAM_INFO(self).max_value)',
-                      "(int/long) The maximum acceptable value, if greater than min_value")
-    add_simple_getter('help',
-                      'PyGccStringOrNone(PARAM_INFO(self).help)',
-                      "(string) A short description of the option.")
+
+    add_simple_getter(
+        "option",
+        "PyGccStringOrNone(PARAM_INFO(self).option)",
+        "(string) The name used with the `--param <name>=<value>' switch to set this value",
+    )
+    add_simple_getter(
+        "default_value",
+        "PyGccInt_FromLong(PARAM_INFO(self).default_value)",
+        "(int/long)",
+    )
+    add_simple_getter(
+        "min_value",
+        "PyGccInt_FromLong(PARAM_INFO(self).min_value)",
+        "(int/long) The minimum acceptable value",
+    )
+    add_simple_getter(
+        "max_value",
+        "PyGccInt_FromLong(PARAM_INFO(self).max_value)",
+        "(int/long) The maximum acceptable value, if greater than min_value",
+    )
+    add_simple_getter(
+        "help",
+        "PyGccStringOrNone(PARAM_INFO(self).help)",
+        "(string) A short description of the option.",
+    )
 
     # "current_value":
-    getter = cu.add_simple_getter('PyGccParameter_get_current_value',
-                                  'PyGccParameter',
-                                  'PyGccInt_FromLong(PARAM_VALUE(self->param_num))')
-    setter = cu.add_simple_int_setter('PyGccParameter_set_current_value',
-                                      'PyGccParameter',
-                                      'current_value',
-                                      'global_options.x_param_values[self->param_num] = PyGccInt_AsLong(value)') #FIXME
-    getsettable.add_gsdef('current_value',
-                          getter, setter,
-                          "(int/long)")
+    getter = cu.add_simple_getter(
+        "PyGccParameter_get_current_value",
+        "PyGccParameter",
+        "PyGccInt_FromLong(PARAM_VALUE(self->param_num))",
+    )
+    setter = cu.add_simple_int_setter(
+        "PyGccParameter_set_current_value",
+        "PyGccParameter",
+        "current_value",
+        "global_options.x_param_values[self->param_num] = PyGccInt_AsLong(value)",
+    )  # FIXME
+    getsettable.add_gsdef("current_value", getter, setter, "(int/long)")
 
     cu.add_defn(getsettable.c_defn())
 
-    pytype = PyGccWrapperTypeObject(identifier = 'PyGccParameter_TypeObj',
-                          localname = 'Parameter',
-                          tp_name = 'gcc.Parameter',
-                          tp_dealloc = 'PyGccWrapper_Dealloc',
-                          struct_name = 'PyGccParameter',
-                          tp_new = 'PyType_GenericNew',
-                          tp_getset = getsettable.identifier,
-                          #tp_repr = '(reprfunc)PyGccParameter_repr',
-                          #tp_str = '(reprfunc)PyGccParameter_str',
-                          )
+    pytype = PyGccWrapperTypeObject(
+        identifier="PyGccParameter_TypeObj",
+        localname="Parameter",
+        tp_name="gcc.Parameter",
+        tp_dealloc="PyGccWrapper_Dealloc",
+        struct_name="PyGccParameter",
+        tp_new="PyType_GenericNew",
+        tp_getset=getsettable.identifier,
+        # tp_repr = '(reprfunc)PyGccParameter_repr',
+        # tp_str = '(reprfunc)PyGccParameter_str',
+    )
     cu.add_defn(pytype.c_defn())
     modinit_preinit += pytype.c_invoke_type_ready()
     modinit_postinit += pytype.c_invoke_add_to_module()
 
+
 generate_param()
 
-cu.add_defn("""
+cu.add_defn(
+    """
 int autogenerated_parameter_init_types(void)
 {
-""" + modinit_preinit + """
+"""
+    + modinit_preinit
+    + """
     return 1;
 
 error:
     return 0;
 }
-""")
+"""
+)
 
-cu.add_defn("""
+cu.add_defn(
+    """
 void autogenerated_parameter_add_types(PyObject *m)
 {
-""" + modinit_postinit + """
+"""
+    + modinit_postinit
+    + """
 }
-""")
+"""
+)
 
 
 print(cu.as_str())
-
